@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Pulse — Noticias de Inteligencia Artificial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="header">
+    <div class="container header__inner">
+
+      <a href="#" class="logo">
+        <div class="logo__icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="3" fill="currentColor"/>
+            <circle cx="10" cy="2" r="1.5" fill="currentColor" opacity=".5"/>
+            <circle cx="10" cy="18" r="1.5" fill="currentColor" opacity=".5"/>
+            <circle cx="2" cy="10" r="1.5" fill="currentColor" opacity=".5"/>
+            <circle cx="18" cy="10" r="1.5" fill="currentColor" opacity=".5"/>
+            <circle cx="4.1" cy="4.1" r="1.5" fill="currentColor" opacity=".3"/>
+            <circle cx="15.9" cy="15.9" r="1.5" fill="currentColor" opacity=".3"/>
+            <circle cx="15.9" cy="4.1" r="1.5" fill="currentColor" opacity=".3"/>
+            <circle cx="4.1" cy="15.9" r="1.5" fill="currentColor" opacity=".3"/>
+          </svg>
+        </div>
+        <span>AI<strong>Pulse</strong></span>
+      </a>
+
+      <nav class="nav">
+        <a href="#" class="nav__link nav__link--active">Inicio</a>
+        <a href="#" class="nav__link">Modelos</a>
+        <a href="#" class="nav__link">Investigación</a>
+        <a href="#" class="nav__link">Industria</a>
+        <a href="#" class="nav__link">Ética</a>
+      </nav>
+
+      <div class="header__actions">
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input id="search-input" type="search" placeholder="Buscar noticias…" autocomplete="off" />
+        </div>
+        <button id="theme-toggle" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema"></button>
+        <span class="live-badge">
+          <span class="live-dot"></span>En vivo
+        </span>
+      </div>
+
+    </div>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <div class="container hero__inner">
+        <div class="hero__tag">16 de junio, 2026</div>
+        <h1 class="hero__title">Noticias de<br /><span class="gradient-text">Inteligencia Artificial</span></h1>
+        <p class="hero__subtitle">Análisis, avances y tendencias del ecosistema IA, curadas para quienes construyen el futuro.</p>
+      </div>
+      <div class="hero__blur hero__blur--1"></div>
+      <div class="hero__blur hero__blur--2"></div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+
+        <div class="section__header">
+          <h2 class="section__title">Últimas noticias</h2>
+          <span class="section__count">6 artículos</span>
+        </div>
+
+        <div class="filter-bar" role="group" aria-label="Filtrar por categoría">
+          <button class="filter-btn filter-btn--active" data-filter="all">Todos</button>
+          <button class="filter-btn" data-filter="model">
+            <span class="filter-dot filter-dot--model"></span>Modelos
+          </button>
+          <button class="filter-btn" data-filter="research">
+            <span class="filter-dot filter-dot--research"></span>Investigación
+          </button>
+          <button class="filter-btn" data-filter="industry">
+            <span class="filter-dot filter-dot--industry"></span>Industria
+          </button>
+          <button class="filter-btn" data-filter="ethics">
+            <span class="filter-dot filter-dot--ethics"></span>Ética
+          </button>
+        </div>
+
+        <div class="grid" id="news-grid">
+
+          <article class="card card--featured" data-category="model">
+            <div class="card__top">
+              <span class="tag tag--model">Modelos</span>
+              <span class="card__date" data-date="2026-06-16"></span>
+            </div>
+            <h2 class="card__title card__title--lg">GPT-5 llega con razonamiento extendido y ventana de contexto de 2M tokens</h2>
+            <p class="card__excerpt">OpenAI presentó su nuevo modelo insignia con capacidades multimodales mejoradas y un sistema de razonamiento en cadena que supera benchmarks previos en matemáticas y código. Los desarrolladores ya pueden acceder a la API en versión beta.</p>
+            <div class="card__footer">
+              <a href="#" class="card__link">Leer artículo →</a>
+              <span class="card__read">5 min</span>
+            </div>
+          </article>
+
+          <article class="card card--side" data-category="research">
+            <div class="card__top">
+              <span class="tag tag--research">Investigación</span>
+              <span class="card__date" data-date="2026-06-15"></span>
+            </div>
+            <h3 class="card__title">DeepMind publica AlphaFold 3 con soporte para moléculas complejas</h3>
+            <p class="card__excerpt">La nueva versión extiende su cobertura a ADN, ARN y pequeñas moléculas, abriendo posibilidades en diseño de fármacos.</p>
+            <div class="card__footer">
+              <a href="#" class="card__link">Leer →</a>
+              <span class="card__read">4 min</span>
+            </div>
+          </article>
+
+          <article class="card card--side" data-category="industry">
+            <div class="card__top">
+              <span class="tag tag--industry">Industria</span>
+              <span class="card__date" data-date="2026-06-14"></span>
+            </div>
+            <h3 class="card__title">Anthropic cierra ronda de 3.000 M$ liderada por Google y Amazon</h3>
+            <p class="card__excerpt">La inversión sitúa a Anthropic en una valoración de 60.000 millones y acelerará el desarrollo de Claude y su plataforma de agentes.</p>
+            <div class="card__footer">
+              <a href="#" class="card__link">Leer →</a>
+              <span class="card__read">3 min</span>
+            </div>
+          </article>
+
+          <article class="card" data-category="ethics">
+            <div class="card__top">
+              <span class="tag tag--ethics">Ética</span>
+              <span class="card__date" data-date="2026-06-13"></span>
+            </div>
+            <h3 class="card__title">La UE aprueba los primeros reglamentos de aplicación de la AI Act</h3>
+            <p class="card__excerpt">Bruselas publica las guías técnicas que deberán seguir los proveedores de modelos de propósito general a partir de agosto de 2026.</p>
+            <div class="card__footer">
+              <a href="#" class="card__link">Leer →</a>
+              <span class="card__read">6 min</span>
+            </div>
+          </article>
+
+          <article class="card" data-category="model">
+            <div class="card__top">
+              <span class="tag tag--model">Modelos</span>
+              <span class="card__date" data-date="2026-06-12"></span>
+            </div>
+            <h3 class="card__title">Mistral lanza Mistral Large 3 con soporte nativo de 32 idiomas</h3>
+            <p class="card__excerpt">El nuevo modelo open-weight mejora la comprensión multilingüe y reduce la tasa de alucinación en un 40% según sus propias métricas.</p>
+            <div class="card__footer">
+              <a href="#" class="card__link">Leer →</a>
+              <span class="card__read">4 min</span>
+            </div>
+          </article>
+
+          <article class="card" data-category="research">
+            <div class="card__top">
+              <span class="tag tag--research">Investigación</span>
+              <span class="card__date" data-date="2026-06-11"></span>
+            </div>
+            <h3 class="card__title">Meta AI publica JEPA-World, un modelo de mundo sin lenguaje</h3>
+            <p class="card__excerpt">El sistema de representación latente aprende a predecir el futuro sin necesidad de texto, acercándose a la hipótesis del "world model".</p>
+            <div class="card__footer">
+              <a href="#" class="card__link">Leer →</a>
+              <span class="card__read">7 min</span>
+            </div>
+          </article>
+
+        </div>
+
+        <p class="no-results" id="no-results" hidden>
+          No se encontraron artículos para esta selección.
+        </p>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="logo">
+        <div class="logo__icon">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="3" fill="currentColor"/>
+            <circle cx="10" cy="2" r="1.5" fill="currentColor" opacity=".5"/>
+            <circle cx="10" cy="18" r="1.5" fill="currentColor" opacity=".5"/>
+            <circle cx="2" cy="10" r="1.5" fill="currentColor" opacity=".5"/>
+            <circle cx="18" cy="10" r="1.5" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+        <span>AI<strong>Pulse</strong></span>
+      </span>
+      <p class="footer__copy">© 2026 AI Pulse · Noticias de Inteligencia Artificial</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
