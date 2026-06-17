@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* ── Dark mode: se activa añadiendo la clase .dark al elemento <html> ── */
+@variant dark (&:is(.dark *));
+
+/* ── Fuentes personalizadas ─────────────────────────────────────────── */
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-head: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* ── Tokens de color: modo claro por defecto ────────────────────────── */
+:root {
+  --bg:        #f2f2f8;
+  --bg-card:   #ffffff;
+  --bg-card-h: #f0f0fa;
+  --border:    rgba(0,0,0,0.08);
+  --border-h:  rgba(0,0,0,0.16);
+  --text-1:    #0d0d1a;
+  --text-2:    #52527a;
+  --text-3:    #9898b0;
+  --header-bg: rgba(242,242,248,0.88);
+}
+
+/* ── Tokens de color: modo oscuro ───────────────────────────────────── */
+.dark {
+  --bg:        #0a0a0f;
+  --bg-card:   #111118;
+  --bg-card-h: #16161f;
+  --border:    rgba(255,255,255,0.07);
+  --border-h:  rgba(255,255,255,0.14);
+  --text-1:    #f0f0f5;
+  --text-2:    #9898b0;
+  --text-3:    #5c5c78;
+  --header-bg: rgba(10,10,15,0.85);
+}
+
+/* ── Base ────────────────────────────────────────────────────────────── */
+/* Dentro de @layer base: estas reglas ceden ante las utilidades de Tailwind.
+   El Preflight de Tailwind ya hace el reset de margin/padding/box-sizing,
+   así que solo añadimos lo que no trae por defecto. */
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+}
+
+/* ── Utilidades que Tailwind no puede expresar limpiamente ──────────── */
+.gradient-text {
+  background: linear-gradient(90deg, #6c63ff, #3ecfcf);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-blur {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+/* GSAP necesita display:inline-block para animar palabras con translateY */
+.gsap-word { display: inline-block; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(.8); }
+}
+.live-dot { animation: pulse 1.8s ease-in-out infinite; }
+
+/* ── Tippy: tema personalizado ──────────────────────────────────────── */
+.tippy-box[data-theme~='aipulse'] {
+  background: var(--bg-card);
+  color: var(--text-1);
+  border: 1px solid var(--border-h);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+.tippy-box[data-theme~='aipulse'] .tippy-arrow { color: var(--bg-card); }
