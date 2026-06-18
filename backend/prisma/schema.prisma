@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Article {
+  id           Int       @id @default(autoincrement())
+  title        String
+  url          String    @unique
+  excerpt      String?
+  source       String?
+  category     String
+  image_url    String?
+  read_time    Int?
+  published_at DateTime?
+  votes_up     Int       @default(0)
+  votes_down   Int       @default(0)
+  created_at   DateTime  @default(now())
+
+  @@map("articles")
+}
+
+model User {
+  id                     Int       @id @default(autoincrement())
+  username               String    @unique
+  email                  String    @unique
+  password_hash          String
+  role                   String    @default("user")
+  email_verified         Boolean   @default(false)
+  verification_token     String?   @unique
+  reset_token            String?   @unique
+  reset_token_expires_at DateTime?
+  is_active              Boolean   @default(true)
+  last_login_at          DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model NewsletterSubscription {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  verified   Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@map("newsletter_subscriptions")
+}
