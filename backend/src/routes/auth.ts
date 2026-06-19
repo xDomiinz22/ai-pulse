@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import prisma from '../lib/prisma'
 import { authenticate, AuthRequest } from '../middleware/auth'
+import { config } from '../config'
 
 const router = Router()
 
@@ -58,8 +59,8 @@ router.post('/login', async (req: Request, res: Response) => {
 
   const token = jwt.sign(
     { sub: user.id, role: user.role },
-    process.env.JWT_SECRET!,
-    { expiresIn: '7d' },
+    config.jwtSecret,
+    { expiresIn: config.jwtExpiresIn, algorithm: config.jwtAlgorithm } as jwt.SignOptions,
   )
 
   res.json({

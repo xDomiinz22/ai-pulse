@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import { config } from '../config'
 
 export interface AuthRequest extends Request {
   userId?: number
@@ -14,7 +15,10 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
   }
   try {
     const token = header.slice(7)
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as unknown as { sub: number; role: string }
+    // Pin the expected algorithm — never trust the `alg` from the token header.
+    const payload = jwt.verify(token, config.jwtSecret, {
+      algorithms: [config.jwtAlgorithm],
+    }) as unknown as { sub: number; role: string }
     req.userId   = payload.sub
     req.userRole = payload.role
     next()
