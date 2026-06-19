@@ -1,44 +1,61 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import Fuse from 'fuse.js'
 import { useTheme } from './hooks/useTheme'
-import { ARTICLES } from './data/articles'
-import type { FilterValue } from './types'
+import type { Article, FilterValue } from './types'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import FilterBar from './components/FilterBar'
 import NewsGrid from './components/NewsGrid'
 import Footer from './components/Footer'
 
-// Instancia de Fuse creada una sola vez fuera del componente
-// (los artículos son estáticos; cuando haya API esto irá dentro de useMemo)
-const fuse = new Fuse(ARTICLES, {
-  keys: [
-    { name: 'title',   weight: 0.7 },
-    { name: 'excerpt', weight: 0.3 },
-  ],
-  threshold: 0.35,
-})
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 export default function App() {
   const [theme, toggleTheme] = useTheme()
   const [filter, setFilter]  = useState<FilterValue>('all')
   const [query,  setQuery]   = useState('')
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState<string | null>(null)
 
-  // Los artículos visibles se derivan del estado: React los recalcula
-  // automáticamente cada vez que filter o query cambian
-  const visibleArticles = useMemo(() => {
-    // 1. Búsqueda fuzzy (si hay query)
-    let result = query.trim()
-      ? fuse.search(query).map(r => r.item)
-      : ARTICLES
+  const fetchArticles = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (filter !== 'all') params.set('category', filter)
+      if (query.trim())     params.set('q', query.trim())
+      params.set('limit', '50')
 
-    // 2. Filtro por categoría encima del resultado de búsqueda
-    if (filter !== 'all') {
-      result = result.filter(a => a.category === filter)
+      const res = await fetch(`${API}/api/articles?${params}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setArticles(data.data ?? [])
+    } catch (e) {
+      setError('Could not load news articles.')
+      console.error(e)
+    } finally {
+      setLoading(false)
     }
-
-    return result
   }, [filter, query])
+
+  useEffect(() => {
+    const id = setTimeout(fetchArticles, query.trim() ? 400 : 0)
+    return () => clearTimeout(id)
+  }, [fetchArticles, query])
+
+  const fuse = useMemo(
+    () => new Fuse(articles, {
+      keys: [{ name: 'title', weight: 0.7 }, { name: 'short_summary', weight: 0.3 }],
+      threshold: 0.35,
+    }),
+    [articles]
+  )
+
+  const visibleArticles = useMemo(() => {
+    if (!query.trim()) return articles
+    return fuse.search(query).map(r => r.item)
+  }, [articles, fuse, query])
 
   const isFiltered = filter !== 'all' || query.trim() !== ''
 
@@ -59,16 +76,22 @@ export default function App() {
 
             <div className="flex items-baseline gap-3.5 mb-5">
               <h2 className="font-head text-[22px] font-semibold text-[var(--text-1)]">
-                Últimas noticias
+                Latest news
               </h2>
-              <span className="text-[13px] text-[var(--text-3)]">
-                {visibleArticles.length} artículo{visibleArticles.length !== 1 ? 's' : ''}
-              </span>
+              {!loading && (
+                <span className="text-[13px] text-[var(--text-3)]">
+                  {visibleArticles.length} article{visibleArticles.length !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
 
             <FilterBar active={filter} onChange={setFilter} />
 
-            <NewsGrid articles={visibleArticles} isFiltered={isFiltered} />
+            {error ? (
+              <p className="text-center text-[var(--text-3)] py-16">{error}</p>
+            ) : (
+              <NewsGrid articles={visibleArticles} isFiltered={isFiltered} loading={loading} />
+            )}
 
           </div>
         </section>

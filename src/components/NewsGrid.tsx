@@ -6,9 +6,10 @@ import Card from './Card'
 interface Props {
   articles: Article[]
   isFiltered: boolean
+  loading?: boolean
 }
 
-export default function NewsGrid({ articles, isFiltered }: Props) {
+export default function NewsGrid({ articles, isFiltered, loading }: Props) {
   const gridRef = useRef<HTMLDivElement>(null)
   const initialRender = useRef(true)
 
@@ -48,10 +49,18 @@ export default function NewsGrid({ articles, isFiltered }: Props) {
     return () => ctx.revert()
   }, [articles])
 
+  if (loading) {
+    return (
+      <p className="text-center py-16 text-[var(--text-3)] text-[15px]">
+        Loading news…
+      </p>
+    )
+  }
+
   if (articles.length === 0) {
     return (
       <p className="text-center py-16 text-[var(--text-3)] text-[15px]">
-        No se encontraron artículos para esta selección.
+        No articles found for this selection.
       </p>
     )
   }

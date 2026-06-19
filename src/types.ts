@@ -3,10 +3,15 @@ export type FilterValue = Category | 'all'
 export type Theme = 'dark' | 'light'
 
 export interface Article {
-  id: string
+  id: number
   title: string
-  excerpt: string
+  short_summary: string | null
   category: Category
-  date: string   // ISO 8601: "2026-06-16"
-  readTime: number
+  source: string | null
+  image_url: string | null
+  read_time: number | null
+  published_at: string | null
+  url: string
+  votes_up: number
+  votes_down: number
 }
