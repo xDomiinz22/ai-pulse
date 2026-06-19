@@ -10,7 +10,7 @@ model Article {
   id           Int       @id @default(autoincrement())
   title        String
   url          String    @unique
-  excerpt      String?
+  short_summary String?
   source       String?
   category     String
   image_url    String?

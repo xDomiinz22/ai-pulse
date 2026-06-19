@@ -12,8 +12,8 @@ router.get('/', async (req: Request, res: Response) => {
   if (category && category !== 'all') where.category = category
   if (q) {
     where.OR = [
-      { title:   { contains: q, mode: 'insensitive' } },
-      { excerpt: { contains: q, mode: 'insensitive' } },
+      { title:         { contains: q, mode: 'insensitive' } },
+      { short_summary: { contains: q, mode: 'insensitive' } },
     ]
   }
 
@@ -58,7 +58,7 @@ router.post('/:id/vote', async (req: Request, res: Response) => {
 
 // POST /api/articles — crear artículo (solo admin)
 router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
-  const { title, url, excerpt, source, category, image_url, read_time, published_at } = req.body
+  const { title, url, short_summary, source, category, image_url, read_time, published_at } = req.body
 
   if (!title || !url || !category) {
     res.status(400).json({ error: 'title, url y category son obligatorios' })
@@ -66,7 +66,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
   }
 
   const article = await prisma.article.create({
-    data: { title, url, excerpt, source, category, image_url, read_time, published_at: published_at ? new Date(published_at) : null },
+    data: { title, url, short_summary, source, category, image_url, read_time, published_at: published_at ? new Date(published_at) : null },
   })
 
   res.status(201).json(article)
