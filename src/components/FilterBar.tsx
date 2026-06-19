@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import tippy from 'tippy.js'
 import type { FilterValue, Category } from '../types'
-import { ARTICLES } from '../data/articles'
 import { cn } from '../utils'
 
 const FILTERS: { value: FilterValue; label: string; dot?: string }[] = [
@@ -22,18 +21,20 @@ const CATEGORY_LABELS: Record<Category, string> = {
 interface Props {
   active: FilterValue
   onChange: (f: FilterValue) => void
+  counts: Record<string, number>
 }
 
-export default function FilterBar({ active, onChange }: Props) {
+export default function FilterBar({ active, onChange, counts }: Props) {
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
 
-  // Tippy en cada botón de categoría mostrando el conteo
+  // Tippy on each category button showing the real article count.
+  // Depends on `counts` so tooltips are (re)created once the data arrives.
   useEffect(() => {
     const instances = FILTERS.flatMap((f, i) => {
       if (f.value === 'all') return []
       const el = btnRefs.current[i]
       if (!el) return []
-      const count = ARTICLES.filter(a => a.category === f.value).length
+      const count = counts[f.value] ?? 0
       return [tippy(el, {
         content: `${CATEGORY_LABELS[f.value as Category]} · ${count} article${count !== 1 ? 's' : ''}`,
         placement: 'bottom',
@@ -43,10 +44,10 @@ export default function FilterBar({ active, onChange }: Props) {
       })]
     })
     return () => instances.forEach(i => i.destroy())
-  }, [])
+  }, [counts])
 
   return (
-    <div className="flex flex-wrap gap-2 mb-7" role="group" aria-label="Filtrar por categoría">
+    <div className="flex flex-wrap gap-2 mb-7" role="group" aria-label="Filter by category">
       {FILTERS.map((f, i) => (
         <button
           key={f.value}

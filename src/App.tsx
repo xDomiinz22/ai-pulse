@@ -17,6 +17,7 @@ export default function App() {
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
+  const [counts, setCounts]     = useState<Record<string, number>>({})
 
   const fetchArticles = useCallback(async () => {
     setLoading(true)
@@ -43,6 +44,15 @@ export default function App() {
     const id = setTimeout(fetchArticles, query.trim() ? 400 : 0)
     return () => clearTimeout(id)
   }, [fetchArticles, query])
+
+  // Real per-category counts for the filter tooltips (independent of the
+  // active filter, so the numbers always reflect the whole dataset).
+  useEffect(() => {
+    fetch(`${API}/api/articles/category-counts`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setCounts(data) })
+      .catch(console.error)
+  }, [])
 
   const fuse = useMemo(
     () => new Fuse(articles, {
@@ -85,7 +95,7 @@ export default function App() {
               )}
             </div>
 
-            <FilterBar active={filter} onChange={setFilter} />
+            <FilterBar active={filter} onChange={setFilter} counts={counts} />
 
             {error ? (
               <p className="text-center text-[var(--text-3)] py-16">{error}</p>

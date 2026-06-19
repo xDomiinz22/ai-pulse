@@ -60,6 +60,7 @@ interface Analysis {
   ai_related: boolean
   category: Category
   summary: string
+  read_time: number
 }
 
 async function analyzeArticle(title: string, rawText: string): Promise<Analysis | null> {
@@ -86,11 +87,13 @@ TASK 3 — SUMMARY ("summary"): Write a clean English summary following these ru
   - Be factual and informative, not promotional.
   - If ai_related is false, set summary to an empty string.
 
+TASK 4 — READING TIME ("read_time"): Estimate how many minutes it takes to read the FULL article (not just the snippet), as a whole integer between 1 and 30. Base it on the topic and apparent depth: short news blurbs are 1-3, standard articles 4-8, long research papers or deep technical pieces 9+.
+
 Title: ${title}
 Text: ${rawText.slice(0, 800)}
 
 Respond with only this JSON:
-{"ai_related": boolean, "category": "model|research|industry|ethics", "summary": "..."}`
+{"ai_related": boolean, "category": "model|research|industry|ethics", "summary": "...", "read_time": number}`
 
   try {
     const response = await callGemini(prompt)
@@ -108,7 +111,13 @@ Respond with only this JSON:
       summary = (cut.match(/^.*[.!?]/s)?.[0] ?? cut).trim()
     }
 
-    return { ai_related, category, summary }
+    // Use Gemini's reading-time estimate, clamped to 1-30; fall back to word count
+    const parsedRt = Math.round(Number(json.read_time))
+    const read_time = Number.isFinite(parsedRt) && parsedRt > 0
+      ? Math.min(30, parsedRt)
+      : estimateReadTime(rawText)
+
+    return { ai_related, category, summary, read_time }
   } catch (err) {
     console.error('[scraper] Analyze error:', (err as Error).message.slice(0, 80))
     return null  // null → discard (treated as failed analysis)
@@ -159,7 +168,7 @@ export async function runScraper(): Promise<void> {
             source: feed.name,
             category: analysis.category,
             image_url: (item as any).enclosure?.url || null,
-            read_time: estimateReadTime(rawText),
+            read_time: analysis.read_time,
             published_at: item.pubDate ? new Date(item.pubDate) : null,
           },
         })

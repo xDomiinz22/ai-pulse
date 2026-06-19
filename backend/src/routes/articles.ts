@@ -36,6 +36,25 @@ router.get('/', async (req: Request, res: Response) => {
   res.json({ data: articles, total, page: pageNum, limit: limitNum })
 })
 
+// GET /api/articles/category-counts — número real de artículos por categoría.
+// Debe declararse antes de "/:id" para que no lo capture como un id.
+router.get('/category-counts', async (_req: Request, res: Response) => {
+  const grouped = await prisma.article.groupBy({
+    by: ['category'],
+    _count: { _all: true },
+  })
+
+  const counts: Record<string, number> = { model: 0, research: 0, industry: 0, ethics: 0 }
+  let all = 0
+  for (const g of grouped) {
+    const n = g._count._all
+    if (g.category in counts) counts[g.category] = n
+    all += n
+  }
+
+  res.json({ all, ...counts })
+})
+
 // Parse and validate a numeric :id route param. Returns null if invalid.
 function parseId(raw: string | string[] | undefined): number | null {
   if (typeof raw !== 'string') return null
