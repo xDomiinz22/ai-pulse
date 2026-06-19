@@ -47,6 +47,9 @@ router.post('/:id/vote', async (req: Request, res: Response) => {
     return
   }
 
+  const exists = await prisma.article.findUnique({ where: { id: Number(req.params.id) }, select: { id: true } })
+  if (!exists) { res.status(404).json({ error: 'Artículo no encontrado' }); return }
+
   const article = await prisma.article.update({
     where: { id: Number(req.params.id) },
     data: type === 'up' ? { votes_up: { increment: 1 } } : { votes_down: { increment: 1 } },
