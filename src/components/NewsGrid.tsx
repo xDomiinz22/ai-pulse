@@ -49,7 +49,10 @@ export default function NewsGrid({ articles, isFiltered, loading }: Props) {
     return () => ctx.revert()
   }, [articles])
 
-  if (loading) {
+  // Only show the full-height loading placeholder on the very first load.
+  // On filter/search refetches we keep the current grid mounted so the page
+  // height stays stable and the viewport doesn't jump.
+  if (loading && articles.length === 0) {
     return (
       <p className="text-center py-16 text-[var(--text-3)] text-[15px]">
         Loading news…

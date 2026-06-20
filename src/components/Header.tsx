@@ -64,23 +64,6 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
           AI<strong className="text-[#6c63ff]">Pulse</strong>
         </a>
 
-        {/* Nav */}
-        <nav className="flex gap-1">
-          {['Home', 'Models', 'Research', 'Industry', 'Ethics'].map((item, i) => (
-            <a
-              key={item}
-              href="#"
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                i === 0
-                  ? 'bg-[var(--bg-card)] text-[var(--text-1)]'
-                  : 'text-[var(--text-2)] hover:bg-[var(--bg-card)] hover:text-[var(--text-1)]'
-              }`}
-            >
-              {item}
-            </a>
-          ))}
-        </nav>
-
         {/* Acciones */}
         <div className="flex items-center gap-2.5 ml-auto">
 
