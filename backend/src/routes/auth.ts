@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import prisma from '../lib/prisma'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { config } from '../config'
+import { redis } from '../lib/redis'
 
 const router = Router()
 
@@ -60,7 +61,11 @@ router.post('/login', async (req: Request, res: Response) => {
   const token = jwt.sign(
     { sub: user.id, role: user.role },
     config.jwtSecret,
-    { expiresIn: config.jwtExpiresIn, algorithm: config.jwtAlgorithm } as jwt.SignOptions,
+    {
+      expiresIn: config.jwtExpiresIn,
+      algorithm: config.jwtAlgorithm,
+      jwtid: crypto.randomUUID(),  // unique id so the token can be revoked
+    } as jwt.SignOptions,
   )
 
   res.json({
@@ -122,6 +127,25 @@ router.post('/reset-password', async (req: Request, res: Response) => {
   })
 
   res.json({ message: 'Contraseña actualizada correctamente' })
+})
+
+// POST /api/auth/logout — revoca el token actual añadiéndolo a la denylist.
+// Como los JWT son stateless, esto solo es efectivo con Redis configurado.
+router.post('/logout', authenticate, async (req: AuthRequest, res: Response) => {
+  if (!redis) {
+    res.json({ message: 'Sesión cerrada (revocación de token requiere Redis)' })
+    return
+  }
+  if (req.jti && req.tokenExp) {
+    // Keep the entry only until the token would expire anyway.
+    const ttl = Math.max(1, req.tokenExp - Math.floor(Date.now() / 1000))
+    try {
+      await redis.set(`denylist:${req.jti}`, 1, { ex: ttl })
+    } catch (err) {
+      console.error('[logout] denylist write failed:', (err as Error).message)
+    }
+  }
+  res.json({ message: 'Sesión cerrada correctamente' })
 })
 
 // GET /api/auth/me — datos del usuario autenticado

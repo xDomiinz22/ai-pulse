@@ -15,6 +15,10 @@ import { notFound, errorHandler } from './middleware/errorHandler'
 
 const app = express()
 
+// Trust the first proxy hop so req.ip reflects the real client behind a
+// reverse proxy / Vercel — required for correct per-IP rate limiting.
+app.set('trust proxy', 1)
+
 // ─── Security headers (helmet) ────────────────────────────────────────────
 // Sets X-Content-Type-Options: nosniff, X-Frame-Options: DENY, HSTS, and
 // removes X-Powered-By. CSP locked to default-src 'none' since this is a

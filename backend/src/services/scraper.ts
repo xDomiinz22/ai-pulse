@@ -1,6 +1,11 @@
 import Parser from 'rss-parser'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import prisma from '../lib/prisma'
+import { redis } from '../lib/redis'
+import { bumpArticlesVersion } from '../lib/cache'
+
+const LOCK_KEY = 'scraper:lock'
+const LOCK_TTL = 600 // seconds — auto-releases if a run crashes
 
 const parser = new Parser()
 const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -130,7 +135,34 @@ function estimateReadTime(text: string): number {
   return Math.max(1, Math.round(text.trim().split(/\s+/).length / 200))
 }
 
+// Public entry point. Acquires a distributed lock so the scraper never runs
+// twice concurrently (cron + manual trigger, or multiple serverless instances).
 export async function runScraper(): Promise<void> {
+  if (redis) {
+    let acquired: string | number | null = null
+    try {
+      acquired = await redis.set(LOCK_KEY, Date.now(), { nx: true, ex: LOCK_TTL })
+    } catch (err) {
+      console.error('[scraper] lock error, running without lock:', (err as Error).message)
+    }
+    if (acquired === null) {
+      // null only when the key already exists (NX failed) and no error was thrown
+      console.log('[scraper] Another run is already in progress — skipping')
+      return
+    }
+    try {
+      await scrapeFeeds()
+    } finally {
+      try { await redis.del(LOCK_KEY) } catch { /* lock will expire via TTL */ }
+    }
+    return
+  }
+
+  // No Redis → run directly (single-instance dev behaviour).
+  await scrapeFeeds()
+}
+
+async function scrapeFeeds(): Promise<void> {
   console.log('[scraper] Starting...')
   let saved = 0, skipped = 0, filtered = 0
 
@@ -179,6 +211,9 @@ export async function runScraper(): Promise<void> {
       console.error(`[scraper] Error on ${feed.name}:`, (err as Error).message.slice(0, 100))
     }
   }
+
+  // Invalidate cached article lists/counts so the new articles show up at once.
+  if (saved > 0) await bumpArticlesVersion()
 
   console.log(`[scraper] Done — saved: ${saved}, skipped: ${skipped}, filtered: ${filtered}`)
 }

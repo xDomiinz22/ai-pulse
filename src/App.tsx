@@ -6,9 +6,9 @@ import Header from './components/Header'
 import Hero from './components/Hero'
 import FilterBar from './components/FilterBar'
 import NewsGrid from './components/NewsGrid'
+import Trending from './components/Trending'
 import Footer from './components/Footer'
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+import { API } from './lib/api'
 
 export default function App() {
   const [theme, toggleTheme] = useTheme()
@@ -83,6 +83,8 @@ export default function App() {
 
         <section className="py-14 pb-24">
           <div className="max-w-[1160px] mx-auto px-6">
+
+            <Trending />
 
             <div className="flex items-baseline gap-3.5 mb-5">
               <h2 className="font-head text-[22px] font-semibold text-[var(--text-1)]">
