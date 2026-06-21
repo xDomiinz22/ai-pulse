@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../context/AuthContext'
 import { cn } from '../utils'
 
@@ -48,7 +49,7 @@ export default function AuthModal({ open, onClose }: Props) {
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
@@ -121,6 +122,7 @@ export default function AuthModal({ open, onClose }: Props) {
           </button>
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
