@@ -138,28 +138,35 @@ function estimateReadTime(text: string): number {
 // Public entry point. Acquires a distributed lock so the scraper never runs
 // twice concurrently (cron + manual trigger, or multiple serverless instances).
 export async function runScraper(): Promise<void> {
-  if (redis) {
-    let acquired: string | number | null = null
-    try {
-      acquired = await redis.set(LOCK_KEY, Date.now(), { nx: true, ex: LOCK_TTL })
-    } catch (err) {
-      console.error('[scraper] lock error, running without lock:', (err as Error).message)
-    }
-    if (acquired === null) {
-      // null only when the key already exists (NX failed) and no error was thrown
-      console.log('[scraper] Another run is already in progress — skipping')
-      return
-    }
-    try {
-      await scrapeFeeds()
-    } finally {
-      try { await redis.del(LOCK_KEY) } catch { /* lock will expire via TTL */ }
-    }
+  if (!redis) {
+    // No Redis → run directly (single-instance dev behaviour).
+    await scrapeFeeds()
     return
   }
 
-  // No Redis → run directly (single-instance dev behaviour).
-  await scrapeFeeds()
+  let lockHeld = false      // true only when NX confirms another run holds the lock
+  let acquiredLock = false  // true only when WE acquired the lock (so only we release it)
+  try {
+    const acquired = await redis.set(LOCK_KEY, Date.now(), { nx: true, ex: LOCK_TTL })
+    if (acquired === null) lockHeld = true   // key already exists → someone else is running
+    else acquiredLock = true
+  } catch (err) {
+    // Redis error → degrade gracefully and run anyway (never skip on infra failure).
+    console.error('[scraper] lock error, running without lock:', (err as Error).message)
+  }
+
+  if (lockHeld) {
+    console.log('[scraper] Another run is already in progress — skipping')
+    return
+  }
+
+  try {
+    await scrapeFeeds()
+  } finally {
+    if (acquiredLock) {
+      try { await redis.del(LOCK_KEY) } catch { /* lock will expire via TTL */ }
+    }
+  }
 }
 
 async function scrapeFeeds(): Promise<void> {
