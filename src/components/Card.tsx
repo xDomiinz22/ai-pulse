@@ -23,10 +23,9 @@ const TAG_STYLES: Record<string, string> = {
 
 interface Props {
   article: Article
-  featured?: boolean
 }
 
-export default function Card({ article, featured }: Props) {
+export default function Card({ article }: Props) {
   const cardRef = useRef<HTMLElement>(null)
   const tagRef  = useRef<HTMLSpanElement>(null)
 
@@ -100,7 +99,6 @@ export default function Card({ article, featured }: Props) {
         'transition-colors duration-[250ms]',
         'hover:bg-[var(--bg-card-h)] hover:border-[var(--border-h)]',
         'hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)]',
-        featured && 'col-span-2 row-span-2',
       )}
     >
       <div className="flex items-center justify-between">
@@ -120,10 +118,7 @@ export default function Card({ article, featured }: Props) {
         )}
       </div>
 
-      <h2 className={cn(
-        'font-head font-semibold leading-snug text-[var(--text-1)]',
-        featured ? 'text-[22px] leading-[1.3]' : 'text-[16px]',
-      )}>
+      <h2 className="font-head font-semibold leading-snug text-[var(--text-1)] text-[16px]">
         {article.title}
       </h2>
 
@@ -175,7 +170,7 @@ export default function Card({ article, featured }: Props) {
           rel="noopener noreferrer"
           className="text-[13px] font-semibold text-[#6c63ff] hover:text-[#3ecfcf] transition-colors duration-200"
         >
-          {featured ? 'Read article →' : 'Read →'}
+          Read →
         </a>
         <div className="flex items-center gap-3">
           {article.source && (

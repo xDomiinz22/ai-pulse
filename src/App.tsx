@@ -67,8 +67,6 @@ export default function App() {
     return fuse.search(query).map(r => r.item)
   }, [articles, fuse, query])
 
-  const isFiltered = filter !== 'all' || query.trim() !== ''
-
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)] transition-colors duration-300">
       <Header
@@ -102,7 +100,7 @@ export default function App() {
             {error ? (
               <p className="text-center text-[var(--text-3)] py-16">{error}</p>
             ) : (
-              <NewsGrid articles={visibleArticles} isFiltered={isFiltered} loading={loading} />
+              <NewsGrid articles={visibleArticles} loading={loading} />
             )}
 
           </div>

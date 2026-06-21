@@ -5,11 +5,10 @@ import Card from './Card'
 
 interface Props {
   articles: Article[]
-  isFiltered: boolean
   loading?: boolean
 }
 
-export default function NewsGrid({ articles, isFiltered, loading }: Props) {
+export default function NewsGrid({ articles, loading }: Props) {
   const gridRef = useRef<HTMLDivElement>(null)
   const initialRender = useRef(true)
 
@@ -73,13 +72,8 @@ export default function NewsGrid({ articles, isFiltered, loading }: Props) {
       ref={gridRef}
       className="grid grid-cols-3 gap-5"
     >
-      {articles.map((article, i) => (
-        <Card
-          key={article.id}
-          article={article}
-          // La tarjeta destacada solo existe en la vista sin filtro ni búsqueda
-          featured={!isFiltered && i === 0}
-        />
+      {articles.map((article) => (
+        <Card key={article.id} article={article} />
       ))}
     </div>
   )
