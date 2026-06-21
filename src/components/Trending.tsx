@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import type { Article } from '../types'
-import { API } from '../lib/api'
+import { API, ARTICLE_VOTED_EVENT } from '../lib/api'
 
 const DOT: Record<string, string> = {
   model:    'bg-[#6c63ff]',
@@ -12,7 +12,7 @@ const DOT: Record<string, string> = {
 export default function Trending() {
   const [items, setItems] = useState<Article[]>([])
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch(`${API}/api/articles/trending?limit=5`)
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
@@ -22,6 +22,14 @@ export default function Trending() {
       })
       .catch(console.error)
   }, [])
+
+  // Load on mount, then refresh whenever an article is voted anywhere in the
+  // page so the ranking reflects the new counts instantly (no reload needed).
+  useEffect(() => {
+    load()
+    window.addEventListener(ARTICLE_VOTED_EVENT, load)
+    return () => window.removeEventListener(ARTICLE_VOTED_EVENT, load)
+  }, [load])
 
   // Nothing trending yet → don't render the section at all.
   if (items.length === 0) return null

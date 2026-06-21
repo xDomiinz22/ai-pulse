@@ -89,6 +89,10 @@ export interface VoteResult {
   votes_down?: number
 }
 
+// Dispatched on window after a successful vote so other components (e.g. the
+// Trending ranking) can refresh themselves without prop drilling.
+export const ARTICLE_VOTED_EVENT = 'article-voted'
+
 // Cast a vote on an article. Returns the updated counts, or flags that the
 // user already voted (backend anti-spam → HTTP 429).
 export async function voteArticle(id: number, type: VoteType): Promise<VoteResult> {
@@ -103,5 +107,7 @@ export async function voteArticle(id: number, type: VoteType): Promise<VoteResul
   if (!res.ok) return { ok: false, alreadyVoted: false }
 
   const data = await res.json()
+  // Let listeners (Trending) know the counts changed.
+  window.dispatchEvent(new CustomEvent(ARTICLE_VOTED_EVENT))
   return { ok: true, alreadyVoted: false, votes_up: data.votes_up, votes_down: data.votes_down }
 }
