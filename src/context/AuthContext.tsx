@@ -3,6 +3,7 @@ import {
   getMe,
   login as apiLogin,
   register as apiRegister,
+  googleLogin as apiGoogleLogin,
   logout as apiLogout,
   type User,
 } from '../lib/api'
@@ -12,6 +13,7 @@ interface AuthContextValue {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
+  googleLogin: (credential: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -35,13 +37,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (username: string, email: string, password: string) => {
     setUser(await apiRegister(username, email, password))
   }
+  const googleLogin = async (credential: string) => {
+    setUser(await apiGoogleLogin(credential))
+  }
   const logout = async () => {
     await apiLogout()
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout }}>
       {children}
     </AuthContext.Provider>
   )

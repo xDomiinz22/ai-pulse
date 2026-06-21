@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../context/AuthContext'
 import { checkPassword, MIN_PASSWORD_SCORE } from '../lib/passwordStrength'
+import GoogleSignInButton from './GoogleSignInButton'
 import { cn } from '../utils'
 
 interface Props {
@@ -14,7 +15,7 @@ type Mode = 'login' | 'register'
 const STRENGTH_COLORS = ['#ef4444', '#ef4444', '#f59e0b', '#3ecfcf', '#22c55e']
 
 export default function AuthModal({ open, onClose }: Props) {
-  const { login, register } = useAuth()
+  const { login, register, googleLogin } = useAuth()
   const [mode, setMode]         = useState<Mode>('login')
   const [username, setUsername] = useState('')
   const [email, setEmail]       = useState('')
@@ -77,6 +78,19 @@ export default function AuthModal({ open, onClose }: Props) {
     }
   }
 
+  const handleGoogle = async (credential: string) => {
+    setError(null)
+    setBusy(true)
+    try {
+      await googleLogin(credential)
+      onClose()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
@@ -93,6 +107,14 @@ export default function AuthModal({ open, onClose }: Props) {
         <p className="text-[13px] text-[var(--text-3)] mb-6">
           {mode === 'login' ? 'Sign in to AI Pulse' : 'Join AI Pulse'}
         </p>
+
+        <GoogleSignInButton onCredential={handleGoogle} onError={setError} />
+
+        <div className="my-5 flex items-center gap-3">
+          <span className="h-px flex-1 bg-[var(--border)]" />
+          <span className="text-[11px] uppercase tracking-wider text-[var(--text-3)]">or</span>
+          <span className="h-px flex-1 bg-[var(--border)]" />
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           {mode === 'register' && (

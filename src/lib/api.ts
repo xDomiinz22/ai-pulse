@@ -14,6 +14,12 @@ export interface User {
   role: string
 }
 
+// Public Google OAuth Client ID (safe to ship in the frontend). Overridable
+// via env; defaults to the project's client so local dev works with no setup.
+export const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ??
+  '981095267383-jd4d70oquqn2hapea4e9eb88hllg8u7b.apps.googleusercontent.com'
+
 // Reads the readable CSRF token cookie (set by the backend on login/register)
 // to echo it back as a header on mutating requests (double-submit pattern).
 function getCsrfToken(): string {
@@ -48,6 +54,19 @@ export async function register(username: string, email: string, password: string
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'No se pudo crear la cuenta')
+  return data.user
+}
+
+// Sign in / sign up with the Google ID token (credential) from GSI.
+export async function googleLogin(credential: string): Promise<User> {
+  const res = await fetch(`${API}/api/auth/google`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Google sign-in failed')
   return data.user
 }
 

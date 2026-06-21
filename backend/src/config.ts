@@ -30,4 +30,7 @@ export const config = {
   // Configurable; defaults to a practical 1 day (no refresh-token flow yet).
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
   jwtAlgorithm: 'HS256' as const,
+  // Google OAuth Client ID — used to verify the audience of Google ID tokens.
+  // Optional: if unset, the /api/auth/google endpoint returns 503.
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
 }

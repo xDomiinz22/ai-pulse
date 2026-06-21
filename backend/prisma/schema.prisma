@@ -27,7 +27,8 @@ model User {
   id                     Int       @id @default(autoincrement())
   username               String    @unique
   email                  String    @unique
-  password_hash          String
+  password_hash          String?   // optional: Google-only accounts have no password
+  google_id              String?   @unique // Google "sub" claim, set for Google sign-ins
   role                   String    @default("user")
   email_verified         Boolean   @default(false)
   verification_token     String?   @unique

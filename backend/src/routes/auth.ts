@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
+import { OAuth2Client } from 'google-auth-library'
 import prisma from '../lib/prisma'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
@@ -10,6 +11,20 @@ import { redis } from '../lib/redis'
 import { setAuthCookies, clearAuthCookies } from '../lib/cookies'
 
 const router = Router()
+
+// Verifies Google ID tokens against our Client ID (audience).
+const googleClient = new OAuth2Client(config.googleClientId)
+
+// Turns a base (email local part or name) into a unique username by appending
+// a short random suffix whenever the candidate is already taken.
+async function uniqueUsername(base: string): Promise<string> {
+  const clean = base.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || 'user'
+  let candidate = clean
+  while (await prisma.user.findUnique({ where: { username: candidate } })) {
+    candidate = `${clean}_${crypto.randomBytes(2).toString('hex')}`
+  }
+  return candidate
+}
 
 // Signs a JWT, generates a CSRF token, and sets both as cookies.
 // The raw JWT is never sent in the response body (httpOnly cookie only).
@@ -69,6 +84,12 @@ router.post('/login', async (req: Request, res: Response) => {
     return
   }
 
+  // Google-only accounts have no password — they must use "Sign in with Google".
+  if (!user.password_hash) {
+    res.status(401).json({ error: 'Credenciales incorrectas' })
+    return
+  }
+
   const valid = await bcrypt.compare(password, user.password_hash)
   if (!valid) {
     res.status(401).json({ error: 'Credenciales incorrectas' })
@@ -76,6 +97,83 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 
   await prisma.user.update({ where: { id: user.id }, data: { last_login_at: new Date() } })
+
+  issueSession(res, user)  // sets httpOnly auth cookie + csrf cookie
+  res.json({
+    user: { id: user.id, username: user.username, email: user.email, role: user.role },
+  })
+})
+
+// POST /api/auth/google — sign in / sign up with a Google ID token.
+// The frontend sends the `credential` (an ID token JWT) returned by Google
+// Identity Services. We verify it, then find-or-create the matching user.
+router.post('/google', async (req: Request, res: Response) => {
+  if (!config.googleClientId) {
+    res.status(503).json({ error: 'Google sign-in is not configured' })
+    return
+  }
+
+  const { credential } = req.body
+  if (!credential) {
+    res.status(400).json({ error: 'Missing Google credential' })
+    return
+  }
+
+  // Verify the token signature, expiry, and audience (our Client ID).
+  let payload
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: config.googleClientId,
+    })
+    payload = ticket.getPayload()
+  } catch {
+    res.status(401).json({ error: 'Invalid Google credential' })
+    return
+  }
+
+  if (!payload?.email || !payload.sub) {
+    res.status(401).json({ error: 'Google account has no email' })
+    return
+  }
+
+  const googleId = payload.sub
+  const email    = payload.email
+
+  // 1) Existing Google user → log in.
+  let user = await prisma.user.findUnique({ where: { google_id: googleId } })
+
+  // 2) Existing email/password user → link their Google account.
+  if (!user) {
+    const byEmail = await prisma.user.findUnique({ where: { email } })
+    if (byEmail) {
+      user = await prisma.user.update({
+        where: { id: byEmail.id },
+        data: { google_id: googleId, email_verified: true, last_login_at: new Date() },
+      })
+    }
+  }
+
+  // 3) Brand-new user → create a Google-only account (no password).
+  if (!user) {
+    const username = await uniqueUsername(payload.name || email.split('@')[0])
+    user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        google_id: googleId,
+        email_verified: payload.email_verified ?? true,
+        last_login_at: new Date(),
+      },
+    })
+  } else {
+    await prisma.user.update({ where: { id: user.id }, data: { last_login_at: new Date() } })
+  }
+
+  if (!user.is_active) {
+    res.status(403).json({ error: 'This account is disabled' })
+    return
+  }
 
   issueSession(res, user)  // sets httpOnly auth cookie + csrf cookie
   res.json({
