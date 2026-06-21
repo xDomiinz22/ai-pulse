@@ -63,6 +63,24 @@
 /* GSAP necesita display:inline-block para animar palabras con translateY */
 .gsap-word { display: inline-block; }
 
+/* ── Campos de formulario (modal de auth) ───────────────────────────── */
+.input-field {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text-1);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.input-field::placeholder { color: var(--text-3); }
+.input-field:focus {
+  border-color: #6c63ff;
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: .5; transform: scale(.8); }

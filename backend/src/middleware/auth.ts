@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { config } from '../config'
 import { redis } from '../lib/redis'
+import { AUTH_COOKIE } from '../lib/cookies'
 
 export interface AuthRequest extends Request {
   userId?: number
@@ -11,13 +12,17 @@ export interface AuthRequest extends Request {
 }
 
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
+  // Prefer the httpOnly cookie; fall back to the Authorization header for
+  // programmatic API clients (tests, scripts).
   const header = req.headers.authorization
-  if (!header?.startsWith('Bearer ')) {
+  const token = req.cookies?.[AUTH_COOKIE]
+    ?? (header?.startsWith('Bearer ') ? header.slice(7) : undefined)
+
+  if (!token) {
     res.status(401).json({ error: 'Token requerido' })
     return
   }
   try {
-    const token = header.slice(7)
     // Pin the expected algorithm — never trust the `alg` from the token header.
     const payload = jwt.verify(token, config.jwtSecret, {
       algorithms: [config.jwtAlgorithm],

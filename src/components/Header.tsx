@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import tippy from 'tippy.js'
 import type { Theme } from '../types'
+import { useAuth } from '../context/AuthContext'
+import AuthModal from './AuthModal'
 
 const ICON_SUN = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="5"/>
@@ -25,6 +27,9 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
   const badgeRef    = useRef<HTMLSpanElement>(null)
   const toggleRef   = useRef<HTMLButtonElement>(null)
   let debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { user, loading, logout } = useAuth()
+  const [authOpen, setAuthOpen] = useState(false)
 
   // Tippy en el badge "En vivo"
   useEffect(() => {
@@ -102,8 +107,38 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
             Live
           </span>
 
+          {/* Auth: sign-in button or user chip + logout */}
+          {!loading && (
+            user ? (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span
+                  className="flex items-center justify-center w-8 h-8 rounded-full text-white text-[13px] font-semibold uppercase"
+                  style={{ background: 'linear-gradient(135deg,#6c63ff,#3ecfcf)' }}
+                  title={user.username}
+                >
+                  {user.username.slice(0, 1)}
+                </span>
+                <button
+                  onClick={() => logout()}
+                  className="text-[13px] font-medium text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors cursor-pointer"
+                >
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAuthOpen(true)}
+                className="flex-shrink-0 rounded-lg px-4 py-[7px] text-[13px] font-semibold text-white bg-[#6c63ff] hover:opacity-90 transition-opacity duration-200 cursor-pointer"
+              >
+                Sign in
+              </button>
+            )
+          )}
+
         </div>
       </div>
+
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </header>
   )
 }

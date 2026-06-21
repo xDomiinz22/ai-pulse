@@ -3,6 +3,7 @@ import prisma from '../lib/prisma'
 import { redis } from '../lib/redis'
 import { cached, articlesVersion, bumpArticlesVersion } from '../lib/cache'
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth'
+import { csrfProtection } from '../middleware/csrf'
 
 const router = Router()
 
@@ -161,7 +162,7 @@ router.post('/:id/vote', async (req: Request, res: Response) => {
 })
 
 // POST /api/articles — crear artículo (solo admin)
-router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+router.post('/', csrfProtection, authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   const { title, url, short_summary, source, category, image_url, read_time, published_at } = req.body
 
   if (!title || !url || !category) {
@@ -178,7 +179,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
 })
 
 // DELETE /api/articles/:id (solo admin)
-router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+router.delete('/:id', csrfProtection, authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   const id = parseId(req.params.id)
   if (id === null) { res.status(400).json({ error: 'ID inválido' }); return }
 

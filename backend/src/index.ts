@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
+import cookieParser from 'cookie-parser'
 import cron from 'node-cron'
 import { config } from './config'
 import articlesRouter    from './routes/articles'
@@ -10,6 +11,7 @@ import authRouter        from './routes/auth'
 import newsletterRouter  from './routes/newsletter'
 import { runScraper }    from './services/scraper'
 import { authenticate, requireAdmin } from './middleware/auth'
+import { csrfProtection } from './middleware/csrf'
 import { globalLimiter, authLimiter, writeLimiter } from './middleware/rateLimit'
 import { notFound, errorHandler } from './middleware/errorHandler'
 
@@ -36,8 +38,9 @@ app.use(cors({ origin: config.frontendUrl, credentials: true }))
 // ─── Request logging (centralized monitoring) ──────────────────────────────
 app.use(morgan(config.isProd ? 'combined' : 'dev'))
 
-// ─── Body parsing with a size cap (avoid large-payload DoS) ────────────────
-app.use(express.json({ limit: '100kb' }))
+// ─── Body & cookie parsing ─────────────────────────────────────────────────
+app.use(express.json({ limit: '100kb' })) // body cap avoids large-payload DoS
+app.use(cookieParser())
 
 // ─── Global throttling ──────────────────────────────────────────────────────
 app.use(globalLimiter)
@@ -51,7 +54,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
 // Manual scraper trigger — admin only + throttled. Triggers expensive Gemini
 // calls, so it must never be publicly reachable.
-app.post('/api/scraper/run', authenticate, requireAdmin, writeLimiter, (_req, res) => {
+app.post('/api/scraper/run', csrfProtection, authenticate, requireAdmin, writeLimiter, (_req, res) => {
   res.json({ message: 'Scraper iniciado en segundo plano' })
   runScraper().catch(console.error)
 })

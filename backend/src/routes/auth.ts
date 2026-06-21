@@ -4,10 +4,28 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import prisma from '../lib/prisma'
 import { authenticate, AuthRequest } from '../middleware/auth'
+import { csrfProtection } from '../middleware/csrf'
 import { config } from '../config'
 import { redis } from '../lib/redis'
+import { setAuthCookies, clearAuthCookies } from '../lib/cookies'
 
 const router = Router()
+
+// Signs a JWT, generates a CSRF token, and sets both as cookies.
+// The raw JWT is never sent in the response body (httpOnly cookie only).
+function issueSession(res: Response, user: { id: number; role: string }) {
+  const token = jwt.sign(
+    { sub: user.id, role: user.role },
+    config.jwtSecret,
+    {
+      expiresIn: config.jwtExpiresIn,
+      algorithm: config.jwtAlgorithm,
+      jwtid: crypto.randomUUID(),  // unique id so the token can be revoked
+    } as jwt.SignOptions,
+  )
+  const csrfToken = crypto.randomBytes(32).toString('hex')
+  setAuthCookies(res, token, csrfToken)
+}
 
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response) => {
@@ -37,6 +55,7 @@ router.post('/register', async (req: Request, res: Response) => {
   })
 
   // TODO: enviar email con verification_token
+  issueSession(res, user)  // auto-login: set auth + csrf cookies
   res.status(201).json({ user, message: 'Cuenta creada. Verifica tu email para activarla.' })
 })
 
@@ -58,18 +77,8 @@ router.post('/login', async (req: Request, res: Response) => {
 
   await prisma.user.update({ where: { id: user.id }, data: { last_login_at: new Date() } })
 
-  const token = jwt.sign(
-    { sub: user.id, role: user.role },
-    config.jwtSecret,
-    {
-      expiresIn: config.jwtExpiresIn,
-      algorithm: config.jwtAlgorithm,
-      jwtid: crypto.randomUUID(),  // unique id so the token can be revoked
-    } as jwt.SignOptions,
-  )
-
+  issueSession(res, user)  // sets httpOnly auth cookie + csrf cookie
   res.json({
-    token,
     user: { id: user.id, username: user.username, email: user.email, role: user.role },
   })
 })
@@ -131,12 +140,9 @@ router.post('/reset-password', async (req: Request, res: Response) => {
 
 // POST /api/auth/logout — revoca el token actual añadiéndolo a la denylist.
 // Como los JWT son stateless, esto solo es efectivo con Redis configurado.
-router.post('/logout', authenticate, async (req: AuthRequest, res: Response) => {
-  if (!redis) {
-    res.json({ message: 'Sesión cerrada (revocación de token requiere Redis)' })
-    return
-  }
-  if (req.jti && req.tokenExp) {
+router.post('/logout', csrfProtection, authenticate, async (req: AuthRequest, res: Response) => {
+  // Revoke the token server-side (denylist) when Redis is available.
+  if (redis && req.jti && req.tokenExp) {
     // Keep the entry only until the token would expire anyway.
     const ttl = Math.max(1, req.tokenExp - Math.floor(Date.now() / 1000))
     try {
@@ -145,6 +151,7 @@ router.post('/logout', authenticate, async (req: AuthRequest, res: Response) => 
       console.error('[logout] denylist write failed:', (err as Error).message)
     }
   }
+  clearAuthCookies(res)  // remove the cookies from the browser
   res.json({ message: 'Sesión cerrada correctamente' })
 })
 
