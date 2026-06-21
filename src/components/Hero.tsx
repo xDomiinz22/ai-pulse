@@ -1,10 +1,14 @@
 import { useRef, useEffect, useLayoutEffect } from 'react'
 import gsap from 'gsap'
+import { format } from 'date-fns'
 
 export default function Hero() {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const blur1Ref = useRef<HTMLDivElement>(null)
   const blur2Ref = useRef<HTMLDivElement>(null)
+
+  // Today's date, formatted like "June 21, 2026" — recomputed on each render.
+  const today = format(new Date(), 'MMMM d, yyyy')
 
   // useLayoutEffect: corre antes del primer paint → evita el flash donde el texto
   // aparece visible un frame antes de que GSAP lo anime desde opacity:0
@@ -50,7 +54,7 @@ export default function Hero() {
     <section className="relative overflow-hidden py-[90px] pb-[70px] border-b border-[var(--border)]">
       <div className="max-w-[1160px] mx-auto px-6 relative z-10">
         <div className="hero-tag text-xs font-semibold tracking-[.1em] uppercase text-[#3ecfcf] mb-5">
-          June 19, 2026
+          {today}
         </div>
         <h1
           ref={titleRef}
