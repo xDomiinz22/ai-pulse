@@ -31,21 +31,26 @@ app.use(express.json({ limit: '100kb' }))
 app.use(cookieParser())
 app.use(globalLimiter)
 
-app.use('/api/auth',       authLimiter, authRouter)
-app.use('/api/articles',   articlesRouter)
-app.use('/api/newsletter', writeLimiter, newsletterRouter)
+// On Vercel "Services" the backend is mounted at routePrefix /api and Vercel
+// strips that prefix before the request reaches Express, so routes must live at
+// the root (Vercel sets the VERCEL env var automatically). In local dev there
+// is no stripping, so we keep the /api prefix to match the frontend's calls.
+const P = process.env.VERCEL ? '' : '/api'
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }))
+app.use(`${P}/auth`,       authLimiter, authRouter)
+app.use(`${P}/articles`,   articlesRouter)
+app.use(`${P}/newsletter`, writeLimiter, newsletterRouter)
+
+app.get(`${P}/health`, (_req, res) => res.json({ status: 'ok' }))
 
 // Manual scraper trigger — admin only + throttled
-app.post('/api/scraper/run', csrfProtection, authenticate, requireAdmin, writeLimiter, (_req, res) => {
+app.post(`${P}/scraper/run`, csrfProtection, authenticate, requireAdmin, writeLimiter, (_req, res) => {
   res.json({ message: 'Scraper started in background' })
   runScraper().catch(console.error)
 })
 
-// Vercel Cron Job endpoint — Vercel calls this on schedule with
-// Authorization: Bearer <CRON_SECRET> (set automatically in Vercel env)
-app.get('/api/cron/scraper', (req, res) => {
+// Cron trigger endpoint — protected by a shared secret if CRON_SECRET is set
+app.get(`${P}/cron/scraper`, (req, res) => {
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret && req.headers.authorization !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ error: 'Unauthorized' })
