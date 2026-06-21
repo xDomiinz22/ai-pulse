@@ -30,7 +30,7 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
   useEffect(() => {
     if (!badgeRef.current) return
     const instance = tippy(badgeRef.current, {
-      content: 'Noticias actualizadas cada hora',
+      content: 'News updated every hour',
       placement: 'bottom',
       theme: 'aipulse',
     })
@@ -64,23 +64,6 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
           AI<strong className="text-[#6c63ff]">Pulse</strong>
         </a>
 
-        {/* Nav */}
-        <nav className="flex gap-1">
-          {['Inicio', 'Modelos', 'Investigación', 'Industria', 'Ética'].map((item, i) => (
-            <a
-              key={item}
-              href="#"
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                i === 0
-                  ? 'bg-[var(--bg-card)] text-[var(--text-1)]'
-                  : 'text-[var(--text-2)] hover:bg-[var(--bg-card)] hover:text-[var(--text-1)]'
-              }`}
-            >
-              {item}
-            </a>
-          ))}
-        </nav>
-
         {/* Acciones */}
         <div className="flex items-center gap-2.5 ml-auto">
 
@@ -94,7 +77,7 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
               type="search"
               defaultValue={query}
               onChange={handleInput}
-              placeholder="Buscar noticias…"
+              placeholder="Search news…"
               autoComplete="off"
               className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[13px] text-[var(--text-1)] placeholder:text-[var(--text-3)] pl-8 pr-3 py-[7px] w-48 outline-none transition-all duration-300 focus:w-64 focus:border-[#6c63ff] focus:shadow-[0_0_0_3px_rgba(108,99,255,0.15)]"
             />
@@ -104,8 +87,8 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
           <button
             ref={toggleRef}
             onClick={onThemeToggle}
-            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            aria-label="Cambiar tema"
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label="Toggle theme"
             className="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-2)] transition-all duration-200 hover:bg-[var(--bg-card-h)] hover:text-[var(--text-1)] hover:scale-105 active:scale-95 cursor-pointer"
             dangerouslySetInnerHTML={{ __html: theme === 'dark' ? ICON_SUN : ICON_MOON }}
           />
@@ -116,7 +99,7 @@ export default function Header({ theme, onThemeToggle, query, onQueryChange }: P
             className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[.04em] text-rose-500 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-full cursor-default flex-shrink-0"
           >
             <span className="live-dot w-[7px] h-[7px] rounded-full bg-rose-500 flex-shrink-0" />
-            En vivo
+            Live
           </span>
 
         </div>

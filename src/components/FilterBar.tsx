@@ -1,41 +1,42 @@
 import { useEffect, useRef } from 'react'
 import tippy from 'tippy.js'
 import type { FilterValue, Category } from '../types'
-import { ARTICLES } from '../data/articles'
 import { cn } from '../utils'
 
 const FILTERS: { value: FilterValue; label: string; dot?: string }[] = [
-  { value: 'all',      label: 'Todos' },
-  { value: 'model',    label: 'Modelos',       dot: 'bg-[#6c63ff]' },
-  { value: 'research', label: 'Investigación', dot: 'bg-[#3ecfcf]' },
-  { value: 'industry', label: 'Industria',     dot: 'bg-amber-500' },
-  { value: 'ethics',   label: 'Ética',         dot: 'bg-rose-500' },
+  { value: 'all',      label: 'All' },
+  { value: 'model',    label: 'Models',   dot: 'bg-[#6c63ff]' },
+  { value: 'research', label: 'Research', dot: 'bg-[#3ecfcf]' },
+  { value: 'industry', label: 'Industry', dot: 'bg-amber-500' },
+  { value: 'ethics',   label: 'Ethics',   dot: 'bg-rose-500' },
 ]
 
 const CATEGORY_LABELS: Record<Category, string> = {
-  model:    'Modelos de IA',
-  research: 'Investigación científica',
-  industry: 'Noticias de industria',
-  ethics:   'Ética e impacto social',
+  model:    'AI Models',
+  research: 'Research',
+  industry: 'Industry News',
+  ethics:   'Ethics & Policy',
 }
 
 interface Props {
   active: FilterValue
   onChange: (f: FilterValue) => void
+  counts: Record<string, number>
 }
 
-export default function FilterBar({ active, onChange }: Props) {
+export default function FilterBar({ active, onChange, counts }: Props) {
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
 
-  // Tippy en cada botón de categoría mostrando el conteo
+  // Tippy on each category button showing the real article count.
+  // Depends on `counts` so tooltips are (re)created once the data arrives.
   useEffect(() => {
     const instances = FILTERS.flatMap((f, i) => {
       if (f.value === 'all') return []
       const el = btnRefs.current[i]
       if (!el) return []
-      const count = ARTICLES.filter(a => a.category === f.value).length
+      const count = counts[f.value] ?? 0
       return [tippy(el, {
-        content: `${CATEGORY_LABELS[f.value as Category]} · ${count} artículo${count !== 1 ? 's' : ''}`,
+        content: `${CATEGORY_LABELS[f.value as Category]} · ${count} article${count !== 1 ? 's' : ''}`,
         placement: 'bottom',
         theme: 'aipulse',
         animation: 'shift-away',
@@ -43,10 +44,10 @@ export default function FilterBar({ active, onChange }: Props) {
       })]
     })
     return () => instances.forEach(i => i.destroy())
-  }, [])
+  }, [counts])
 
   return (
-    <div className="flex flex-wrap gap-2 mb-7" role="group" aria-label="Filtrar por categoría">
+    <div className="flex flex-wrap gap-2 mb-7" role="group" aria-label="Filter by category">
       {FILTERS.map((f, i) => (
         <button
           key={f.value}
@@ -59,6 +60,7 @@ export default function FilterBar({ active, onChange }: Props) {
               ? 'bg-[#6c63ff] border-[#6c63ff] text-white'
               : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--bg-card-h)] hover:text-[var(--text-1)] hover:-translate-y-px',
           )}
+          aria-label={`Filter by ${f.label}`}
         >
           {f.dot && <span className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', f.dot)} />}
           {f.label}

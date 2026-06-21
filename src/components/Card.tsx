@@ -1,17 +1,17 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import gsap from 'gsap'
 import tippy from 'tippy.js'
 import 'tippy.js/dist/tippy.css'
 import { formatDistanceToNow, parseISO } from 'date-fns'
-import { es } from 'date-fns/locale'
 import type { Article } from '../types'
+import { voteArticle, type VoteType } from '../lib/api'
 import { cn } from '../utils'
 
 const CATEGORY_LABELS: Record<string, string> = {
-  model:    'Modelos de IA',
-  research: 'Investigación científica',
-  industry: 'Noticias de industria',
-  ethics:   'Ética e impacto social',
+  model:    'AI Models',
+  research: 'Research',
+  industry: 'Industry News',
+  ethics:   'Ethics & Policy',
 }
 
 const TAG_STYLES: Record<string, string> = {
@@ -30,12 +30,33 @@ export default function Card({ article, featured }: Props) {
   const cardRef = useRef<HTMLElement>(null)
   const tagRef  = useRef<HTMLSpanElement>(null)
 
-  const relativeDate = formatDistanceToNow(parseISO(article.date), { locale: es, addSuffix: true })
-  const fullDate     = parseISO(article.date).toLocaleDateString('es-ES', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
+  const [votesUp, setVotesUp]     = useState(article.votes_up)
+  const [votesDown, setVotesDown] = useState(article.votes_down)
+  const [voted, setVoted]         = useState(false)
+  const [voting, setVoting]       = useState(false)
 
-  // GSAP: inclinación 3D mientras el cursor está sobre la tarjeta
+  const handleVote = async (type: VoteType) => {
+    if (voted || voting) return
+    setVoting(true)
+    const result = await voteArticle(article.id, type)
+    if (result.ok) {
+      if (result.votes_up !== undefined)   setVotesUp(result.votes_up)
+      if (result.votes_down !== undefined) setVotesDown(result.votes_down)
+      setVoted(true)
+    } else if (result.alreadyVoted) {
+      setVoted(true) // backend says this IP already voted
+    }
+    setVoting(false)
+  }
+
+  const pubDate = article.published_at ? parseISO(article.published_at) : null
+  const relativeDate = pubDate
+    ? formatDistanceToNow(pubDate, { addSuffix: true })
+    : null
+  const fullDate = pubDate
+    ? pubDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
   useEffect(() => {
     const card = cardRef.current
     if (!card) return
@@ -58,7 +79,6 @@ export default function Card({ article, featured }: Props) {
     }
   }, [])
 
-  // Tippy: tooltip en el tag con la descripción de la categoría
   useEffect(() => {
     if (!tagRef.current) return
     const instance = tippy(tagRef.current, {
@@ -83,7 +103,6 @@ export default function Card({ article, featured }: Props) {
         featured && 'col-span-2 row-span-2',
       )}
     >
-      {/* Cabecera: tag + fecha */}
       <div className="flex items-center justify-between">
         <span
           ref={tagRef}
@@ -94,12 +113,13 @@ export default function Card({ article, featured }: Props) {
         >
           {CATEGORY_LABELS[article.category]}
         </span>
-        <span className="text-xs text-[var(--text-3)]" title={fullDate}>
-          {relativeDate}
-        </span>
+        {relativeDate && (
+          <span className="text-xs text-[var(--text-3)]" title={fullDate ?? undefined}>
+            {relativeDate}
+          </span>
+        )}
       </div>
 
-      {/* Título */}
       <h2 className={cn(
         'font-head font-semibold leading-snug text-[var(--text-1)]',
         featured ? 'text-[22px] leading-[1.3]' : 'text-[16px]',
@@ -107,17 +127,64 @@ export default function Card({ article, featured }: Props) {
         {article.title}
       </h2>
 
-      {/* Extracto */}
-      <p className="text-sm leading-[1.7] text-[var(--text-2)] flex-1">
-        {article.excerpt}
-      </p>
+      {article.short_summary && (
+        <p className="text-sm leading-[1.7] text-[var(--text-2)] flex-1">
+          {article.short_summary}
+        </p>
+      )}
 
-      {/* Pie: enlace + tiempo de lectura */}
-      <div className="flex items-center justify-between mt-auto pt-2.5 border-t border-[var(--border)]">
-        <a href="#" className="text-[13px] font-semibold text-[#6c63ff] hover:text-[#3ecfcf] transition-colors duration-200">
-          {featured ? 'Leer artículo →' : 'Leer →'}
+      {/* Vote controls */}
+      <div className="flex items-center gap-2 mt-auto">
+        <button
+          onClick={() => handleVote('up')}
+          disabled={voted || voting}
+          aria-label="Upvote"
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-200',
+            'border-[var(--border)] text-[var(--text-2)]',
+            voted ? 'opacity-60 cursor-default' : 'hover:border-[#3ecfcf]/40 hover:text-[#3ecfcf] cursor-pointer',
+          )}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+          </svg>
+          {votesUp}
+        </button>
+        <button
+          onClick={() => handleVote('down')}
+          disabled={voted || voting}
+          aria-label="Downvote"
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-200',
+            'border-[var(--border)] text-[var(--text-2)]',
+            voted ? 'opacity-60 cursor-default' : 'hover:border-rose-500/40 hover:text-rose-500 cursor-pointer',
+          )}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 14V2" /><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+          </svg>
+          {votesDown}
+        </button>
+        {voted && <span className="text-[11px] text-[var(--text-3)]">Thanks for voting</span>}
+      </div>
+
+      <div className="flex items-center justify-between pt-2.5 border-t border-[var(--border)]">
+        <a
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[13px] font-semibold text-[#6c63ff] hover:text-[#3ecfcf] transition-colors duration-200"
+        >
+          {featured ? 'Read article →' : 'Read →'}
         </a>
-        <span className="text-xs text-[var(--text-3)]">{article.readTime} min</span>
+        <div className="flex items-center gap-3">
+          {article.source && (
+            <span className="text-xs text-[var(--text-3)]">{article.source}</span>
+          )}
+          {article.read_time && (
+            <span className="text-xs text-[var(--text-3)]">{article.read_time} min</span>
+          )}
+        </div>
       </div>
     </article>
   )

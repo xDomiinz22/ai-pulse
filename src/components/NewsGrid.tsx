@@ -6,9 +6,10 @@ import Card from './Card'
 interface Props {
   articles: Article[]
   isFiltered: boolean
+  loading?: boolean
 }
 
-export default function NewsGrid({ articles, isFiltered }: Props) {
+export default function NewsGrid({ articles, isFiltered, loading }: Props) {
   const gridRef = useRef<HTMLDivElement>(null)
   const initialRender = useRef(true)
 
@@ -48,10 +49,21 @@ export default function NewsGrid({ articles, isFiltered }: Props) {
     return () => ctx.revert()
   }, [articles])
 
+  // Only show the full-height loading placeholder on the very first load.
+  // On filter/search refetches we keep the current grid mounted so the page
+  // height stays stable and the viewport doesn't jump.
+  if (loading && articles.length === 0) {
+    return (
+      <p className="text-center py-16 text-[var(--text-3)] text-[15px]">
+        Loading news…
+      </p>
+    )
+  }
+
   if (articles.length === 0) {
     return (
       <p className="text-center py-16 text-[var(--text-3)] text-[15px]">
-        No se encontraron artículos para esta selección.
+        No articles found for this selection.
       </p>
     )
   }

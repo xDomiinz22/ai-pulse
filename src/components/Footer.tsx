@@ -16,7 +16,7 @@ export default function Footer() {
           AI<strong className="text-[#6c63ff]">Pulse</strong>
         </span>
         <p className="text-[13px] text-[var(--text-3)]">
-          © 2026 AI Pulse · Noticias de Inteligencia Artificial
+          © 2026 AI Pulse · Artificial Intelligence News
         </p>
       </div>
     </footer>

@@ -50,17 +50,17 @@ export default function Hero() {
     <section className="relative overflow-hidden py-[90px] pb-[70px] border-b border-[var(--border)]">
       <div className="max-w-[1160px] mx-auto px-6 relative z-10">
         <div className="hero-tag text-xs font-semibold tracking-[.1em] uppercase text-[#3ecfcf] mb-5">
-          16 de junio, 2026
+          June 19, 2026
         </div>
         <h1
           ref={titleRef}
           className="font-head text-[clamp(38px,6vw,68px)] font-bold leading-[1.1] tracking-[-0.02em] mb-5 text-[var(--text-1)]"
         >
-          Noticias de<br />
-          <span className="gradient-text">Inteligencia Artificial</span>
+          AI News<br />
+          <span className="gradient-text">Artificial Intelligence</span>
         </h1>
         <p className="hero-subtitle text-lg leading-[1.7] text-[var(--text-2)] max-w-[520px]">
-          Análisis, avances y tendencias del ecosistema IA, curadas para quienes construyen el futuro.
+          Analysis, breakthroughs and trends from the AI ecosystem, curated for those building the future.
         </p>
       </div>
 
