@@ -61,8 +61,8 @@ export default function AuthModal({ open, onClose }: Props) {
     setError(null)
 
     if (mode === 'register') {
-      if (!passwordsMatch)  { setError('Las contraseñas no coinciden'); return }
-      if (!strongEnough)    { setError('La contraseña es demasiado débil'); return }
+      if (!passwordsMatch)  { setError('Passwords do not match'); return }
+      if (!strongEnough)    { setError('Password is too weak'); return }
     }
 
     setBusy(true)
@@ -160,7 +160,7 @@ export default function AuthModal({ open, onClose }: Props) {
                 className="input-field"
               />
               {confirm && !passwordsMatch && (
-                <p className="-mt-2 text-[11px] text-rose-500">Las contraseñas no coinciden</p>
+                <p className="-mt-2 text-[11px] text-rose-500">Passwords do not match</p>
               )}
             </>
           )}
