@@ -1,4 +1,8 @@
-export const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+// In production (Vercel "Services") the backend lives on the same origin under
+// /api, so VITE_API_URL is set to "" and requests become relative (e.g.
+// "/api/auth/login"). `??` (not `||`) lets an explicit empty string through;
+// only an unset variable falls back to the local dev backend.
+export const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
