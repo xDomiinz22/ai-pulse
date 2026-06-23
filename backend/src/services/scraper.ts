@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import prisma from '../lib/prisma'
 import { redis } from '../lib/redis'
 import { bumpArticlesVersion } from '../lib/cache'
+import { articleEmbeddingText, generateEmbedding, toVectorLiteral } from '../lib/embeddings'
 
 const LOCK_KEY = 'scraper:lock'
 const LOCK_TTL = 600 // seconds — auto-releases if a run crashes
@@ -199,7 +200,7 @@ async function scrapeFeeds(): Promise<void> {
         }
 
         // ── Step 5: save to the website's database ──
-        await prisma.article.create({
+        const created = await prisma.article.create({
           data: {
             title: cleanRawText(item.title),
             url: item.link,
@@ -211,6 +212,19 @@ async function scrapeFeeds(): Promise<void> {
             published_at: item.pubDate ? new Date(item.pubDate) : null,
           },
         })
+
+        // ── Step 6: generate + store the embedding for semantic search.
+        // Best-effort: a failure here doesn't lose the article (the backfill
+        // script can fill any gaps later).
+        try {
+          const vec = await generateEmbedding(
+            articleEmbeddingText(created.title, created.short_summary),
+          )
+          await prisma.$executeRaw`UPDATE articles SET embedding = ${toVectorLiteral(vec)}::vector WHERE id = ${created.id}`
+        } catch (err) {
+          console.error(`[scraper] embedding failed for #${created.id}:`, (err as Error).message)
+        }
+
         console.log(`[scraper] ✓ Saved [${analysis.category}]: ${item.title.slice(0, 60)}`)
         saved++
       }

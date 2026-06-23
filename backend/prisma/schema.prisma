@@ -1,9 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 model Article {
@@ -19,6 +21,9 @@ model Article {
   votes_up     Int       @default(0)
   votes_down   Int       @default(0)
   created_at   DateTime  @default(now())
+  // 768-dim embedding (Gemini text-embedding-004). Prisma can't read/write
+  // vector columns directly, so it's typed Unsupported and accessed via raw SQL.
+  embedding    Unsupported("vector(768)")?
 
   @@map("articles")
 }
