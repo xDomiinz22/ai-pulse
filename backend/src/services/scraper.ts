@@ -233,6 +233,22 @@ async function scrapeFeeds(): Promise<void> {
     }
   }
 
+  // Purge oldest articles when the table exceeds the cap so Neon's free-tier
+  // storage stays within limits. Deletes the oldest by published_at / created_at.
+  const MAX_ARTICLES = 500
+  const total = await prisma.article.count()
+  if (total > MAX_ARTICLES) {
+    const excess = total - MAX_ARTICLES
+    const oldest = await prisma.article.findMany({
+      orderBy: [{ published_at: 'asc' }, { id: 'asc' }],
+      take: excess,
+      select: { id: true },
+    })
+    const ids = oldest.map(a => a.id)
+    await prisma.article.deleteMany({ where: { id: { in: ids } } })
+    console.log(`[scraper] Purged ${ids.length} oldest articles (cap: ${MAX_ARTICLES})`)
+  }
+
   // Invalidate cached article lists/counts so the new articles show up at once.
   if (saved > 0) await bumpArticlesVersion()
 
