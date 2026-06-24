@@ -390,7 +390,7 @@ export default function ChatWidget() {
               className="flex-shrink-0 px-3 py-3"
               style={{ borderTop: '1px solid var(--border)' }}
             >
-              <div className="flex items-end gap-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2 transition-all duration-200 focus-within:border-[#6c63ff]/60 focus-within:shadow-[0_0_0_3px_rgba(108,99,255,0.1)]">
+              <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2 transition-all duration-200 focus-within:border-[#6c63ff]/60 focus-within:shadow-[0_0_0_3px_rgba(108,99,255,0.1)]">
                 <textarea
                   ref={textareaRef}
                   rows={1}
