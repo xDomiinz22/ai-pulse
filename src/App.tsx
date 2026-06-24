@@ -8,6 +8,7 @@ import FilterBar from './components/FilterBar'
 import NewsGrid from './components/NewsGrid'
 import Trending from './components/Trending'
 import Footer from './components/Footer'
+import ChatWidget from './components/ChatWidget'
 import { API } from './lib/api'
 
 export default function App() {
@@ -108,6 +109,7 @@ export default function App() {
       </main>
 
       <Footer />
+      <ChatWidget />
     </div>
   )
 }
