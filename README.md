@@ -4,15 +4,18 @@
 
 **Live demo → [ai-pulse-newsletter.vercel.app](https://ai-pulse-newsletter.vercel.app)**
 
-AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep only genuinely AI-related news (categorizing each one and generating a short summary + read time), and presents them with search, category filters, voting, and a live trending ranking. Authentication supports both email/password and "Sign in with Google".
+AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep only genuinely AI-related news (categorizing each one and generating a short summary + read time), and presents them with search, category filters, voting, and a live trending ranking. It also embeds every article into a pgvector index, powering a built-in **AI chat assistant** that answers questions over the news with citations — and exposes that same semantic search as an **MCP server** any Claude client can connect to. Authentication supports both email/password and "Sign in with Google".
 
 ---
 
 ## Features
 
-- 📰 **Automated news scraping** — RSS feeds parsed hourly, filtered & categorized by Gemini 2.5 Flash (model / research / industry / ethics) with AI-generated summaries and read times.
+- 📰 **Automated news scraping** — RSS feeds parsed hourly, filtered & categorized by Gemini 2.5 Flash (model / research / industry / ethics) with AI-generated summaries and read times. Oldest articles are pruned past a 500-article cap to stay within free-tier storage.
+- 🧠 **Semantic search (pgvector)** — every article is embedded (768-dim, `gemini-embedding-001`) and stored in a Postgres `vector` column, enabling cosine-similarity retrieval over the news.
+- 💬 **AI chat assistant** — a from-scratch agent loop (Gemini 3.5 Flash + tool use) that calls semantic search and answers questions over the database with citations. Streaming-style typing indicator and graceful "model busy" handling.
+- 🔌 **MCP server** — the same `search_articles` retrieval is exposed over the Model Context Protocol (Streamable HTTP), so any MCP client (Claude Desktop, Claude.ai connectors, Claude Code) can query the news with its own model.
 - 🔐 **Authentication** — email/password **and** Google Sign-In, with sessions delivered as httpOnly cookies (JWT never exposed to JS) + CSRF double-submit protection and a password-strength meter.
-- 👍 **Voting & Trending** — upvote/downvote with per-IP anti-spam; a live trending ranking backed by a Redis sorted set that updates instantly on vote.
+- 👍 **Voting & Trending** — upvote/downvote (**logged-in users only**) with per-IP anti-spam; a live trending ranking backed by a Redis sorted set that updates instantly on vote.
 - 🔎 **Search & filters** — fuzzy client-side search (Fuse.js) and per-category filtering with real article counts.
 - 🎨 **Polished UI** — Tailwind CSS v4, GSAP animations, dark/light theme.
 - 🛡️ **Hardened backend** — Helmet security headers, sliding-window rate limiting (Upstash), input caps, and graceful degradation when Redis is unavailable.
@@ -25,8 +28,9 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 | ------------ | ---------------------------------------------------------------------------- |
 | **Frontend** | React 18, Vite, TypeScript, Tailwind CSS v4, GSAP, Fuse.js, date-fns         |
 | **Backend**  | Node.js, Express 5, TypeScript, Prisma 7                                      |
-| **Data**     | Neon (PostgreSQL), Upstash Redis (cache, rate limiting, trending, JWT denylist) |
-| **AI**       | Google Gemini 2.5 Flash (article filtering, categorization, summaries)       |
+| **Data**     | Neon (PostgreSQL + **pgvector**), Upstash Redis (cache, rate limiting, trending, JWT denylist) |
+| **AI**       | Google Gemini — 2.5 Flash (scraper), 3.5 Flash (chat agent), `gemini-embedding-001` (embeddings) |
+| **Agent / MCP** | Hand-built tool-use loop; `@modelcontextprotocol/sdk` (Streamable HTTP server) with Zod-typed tools |
 | **Auth**     | JWT (httpOnly cookies) + CSRF, bcrypt, Google Identity Services, zxcvbn-ts   |
 | **Hosting**  | Vercel (single project, two services on the same origin)                     |
 
@@ -38,17 +42,19 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 .
 ├── index.html              # Vite entry
 ├── src/                    # Frontend (React)
-│   ├── components/         # Header, Hero, NewsGrid, Card, Trending, AuthModal, …
+│   ├── components/         # Header, Hero, NewsGrid, Card, Trending, AuthModal, ChatWidget, …
 │   ├── context/            # AuthContext
 │   ├── hooks/              # useTheme
 │   ├── lib/                # api.ts, passwordStrength.ts
 │   └── App.tsx
 ├── backend/                # Backend (Express)
 │   ├── src/
-│   │   ├── routes/         # articles, auth, newsletter
+│   │   ├── routes/         # articles, auth, chat, mcp, newsletter
 │   │   ├── services/       # scraper (RSS + Gemini)
 │   │   ├── middleware/     # auth, csrf, rateLimit, errorHandler
-│   │   ├── lib/            # prisma, redis, cache, cookies
+│   │   ├── lib/            # prisma, redis, cache, cookies, embeddings,
+│   │   │                   #   articleSearch, agent, mcpServer
+│   │   ├── scripts/        # backfillEmbeddings, ai_agent, mcpTestClient, …
 │   │   ├── app.ts          # Express app (exported)
 │   │   └── index.ts        # Local dev entry (listen + cron)
 │   └── prisma/schema.prisma
@@ -104,7 +110,7 @@ cd backend && npm run dev
 npm run dev
 ```
 
-The scraper runs on backend startup and then hourly, populating the database with fresh articles.
+The scraper runs **hourly** via `node-cron` (it no longer runs on startup, to avoid burning the Gemini quota on every restart). To populate the database immediately, trigger it manually with the admin-only `POST /api/scraper/run` endpoint, or backfill embeddings for existing rows with `npx ts-node --files src/scripts/backfillEmbeddings.ts`.
 
 ---
 
@@ -116,7 +122,8 @@ All backend secrets live in `backend/.env` (git-ignored). See [`backend/.env.exa
 | -------------------------- | :------: | ------------------------------------------------------------------ |
 | `DATABASE_URL`             |    ✅    | PostgreSQL connection string (Neon).                               |
 | `JWT_SECRET`               |    ✅    | ≥ 32 random chars for signing JWTs. Never use a placeholder.       |
-| `GEMINI_API_KEY`           |    ✅    | Google Gemini key used by the scraper.                             |
+| `GEMINI_API_KEY`           |    ✅    | Google Gemini key used by the scraper, embeddings, and chat agent. |
+| `GEMINI_CHAT_MODEL`        |    ➖    | Chat-agent model override (default `gemini-3.5-flash`).            |
 | `GOOGLE_CLIENT_ID`         |    ✅*   | Google OAuth Client ID; verifies Google ID tokens. *Required for Google login. |
 | `UPSTASH_REDIS_REST_URL`   |    ➖    | Upstash Redis REST URL. If unset, cache/rate-limit/trending are disabled. |
 | `UPSTASH_REDIS_REST_TOKEN` |    ➖    | Upstash Redis REST token.                                          |
@@ -158,10 +165,77 @@ Deployed on **Vercel** as a **single project with two services** (Vercel "Servic
 
 Key points:
 
-- The backend runs as an always-on web service (`backend/src/index.ts` → `app.listen` + hourly `node-cron` scraper).
+- The backend runs as an always-on web service (`backend/src/index.ts` → `app.listen` + hourly `node-cron` scraper, loaded via dynamic `import()` since node-cron v4 is ESM-only).
 - Vercel **strips** the `/api` route prefix, so backend routes are mounted at root in production (handled automatically via the `VERCEL` env var).
 - Set the same environment variables from the table above in the Vercel dashboard — except `PORT` and `FRONTEND_URL`, which Vercel manages for you.
 - For Google login, add your deployment URL to the OAuth client's **Authorized JavaScript origins**.
+
+---
+
+## AI Chat & MCP Server
+
+AI Pulse ships two ways to query the news with an LLM, both built on the same
+pgvector semantic search (`backend/src/lib/articleSearch.ts`).
+
+### 1. Built-in chat assistant
+
+A hand-built **agent loop** (`backend/src/lib/agent.ts`) using Gemini 3.5 Flash
+with tool use:
+
+1. The model receives the question and may call the `search_articles` tool.
+2. The backend embeds the query, runs a pgvector cosine search, and feeds the
+   matching articles back to the model.
+3. The model answers with citations. The loop repeats until it stops requesting
+   tools.
+
+Exposed at **`POST /api/chat`** (`{ "question": "..." }` → `{ "answer": "..." }`),
+rate-limited to 5 req/min/IP. When the model is overloaded it returns `503` with
+a friendly "model is busy" message. The frontend `ChatWidget` renders this as a
+floating chat. Try it from the CLI:
+
+```bash
+cd backend
+npx ts-node --files src/scripts/ai_agent.ts "What has OpenAI been doing recently?"
+```
+
+### 2. MCP server
+
+The same `search_articles` retrieval is exposed over the **Model Context
+Protocol** (Streamable HTTP, stateless) at **`POST /api/mcp`**, built with
+`@modelcontextprotocol/sdk`. Any MCP client can connect with **its own model**
+— your server only runs the search and returns data (no text-generation cost on
+your side beyond the query embedding).
+
+**Connect a Claude client:**
+
+```jsonc
+// Claude Desktop — %APPDATA%\Claude\claude_desktop_config.json (Windows)
+{
+  "mcpServers": {
+    "ai-pulse": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://ai-pulse-newsletter.vercel.app/api/mcp"]
+    }
+  }
+}
+```
+
+```bash
+# Claude Code
+claude mcp add --transport http ai-pulse https://ai-pulse-newsletter.vercel.app/api/mcp
+```
+
+For Claude.ai with Custom Connectors, add the URL directly (no `mcp-remote`
+bridge needed). Verify any deployment end-to-end with the included test client:
+
+```bash
+cd backend
+MCP_URL=https://ai-pulse-newsletter.vercel.app/api/mcp \
+  npx ts-node --files src/scripts/mcpTestClient.ts "EU AI regulation"
+```
+
+> **Note:** `backend/tsconfig.json` uses `module`/`moduleResolution: node16` so
+> the MCP SDK's `exports` map resolves to its CommonJS build.
 
 ---
 
