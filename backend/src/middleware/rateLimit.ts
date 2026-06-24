@@ -70,3 +70,9 @@ export const writeLimiter = makeLimiter({
   windowSec: 60, max: 20, prefix: 'rl:write',
   message: 'Too many requests, please slow down.',
 })
+
+// Strict limiter for AI chat (each call hits the Gemini API).
+export const chatLimiter = makeLimiter({
+  windowSec: 60, max: 5, prefix: 'rl:chat',
+  message: 'Too many chat requests. Please wait a moment before asking again.',
+})
