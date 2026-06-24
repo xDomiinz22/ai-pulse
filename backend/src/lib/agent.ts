@@ -7,7 +7,7 @@ import { searchArticles } from './articleSearch'
 
 const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
-const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash'
+const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash'
 
 const model = genai.getGenerativeModel({
   model: CHAT_MODEL,
