@@ -55,23 +55,25 @@ export class ModelBusyError extends Error {
 
 // Retry with exponential back-off on 503/429.
 export async function withRetry<T>(fn: () => Promise<T>, retries = 6): Promise<T> {
-  let lastStatus: 503 | 429 = 503
   for (let i = 0; i < retries; i++) {
     try {
       return await fn()
     } catch (err) {
       const status = (err as { status?: number }).status
-      if ((status === 503 || status === 429) && i < retries - 1) {
-        lastStatus = status as 503 | 429
-        const wait = (i + 1) * 5_000
-        console.warn(`  (model busy [${status}], retrying in ${wait / 1000}s...)`)
-        await new Promise(r => setTimeout(r, wait))
+      if (status === 503 || status === 429) {
+        if (i < retries - 1) {
+          const wait = (i + 1) * 5_000
+          console.warn(`  (model busy [${status}], retrying in ${wait / 1000}s...)`)
+          await new Promise(r => setTimeout(r, wait))
+        } else {
+          throw new ModelBusyError(status as 503 | 429)
+        }
       } else {
         throw err
       }
     }
   }
-  throw new ModelBusyError(lastStatus)
+  throw new ModelBusyError(503) // unreachable, satisfies TypeScript
 }
 
 // ── Agent loop ─────────────────────────────────────────────────────────────
