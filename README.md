@@ -202,14 +202,80 @@ npx ts-node --files src/scripts/ai_agent.ts "What has OpenAI been doing recently
 
 The same `search_articles` retrieval is exposed over the **Model Context
 Protocol** (Streamable HTTP, stateless) at **`POST /api/mcp`**, built with
-`@modelcontextprotocol/sdk`. Any MCP client can connect with **its own model**
-— your server only runs the search and returns data (no text-generation cost on
-your side beyond the query embedding).
+`@modelcontextprotocol/sdk`. MCP is an **open, model-agnostic protocol** — any
+MCP-capable agent can connect with **its own model** (Claude, OpenAI/GPT,
+Cursor, etc.). Your server only runs the search and returns data (no
+text-generation cost on your side beyond the query embedding).
 
-**Connect a Claude client:**
+#### Connecting from any environment
+
+There is nothing to install on the server side — it's already hosted. What
+differs per environment is the **client config**, and they fall into two groups:
+
+| Client type | How it connects | Examples |
+| ----------- | --------------- | -------- |
+| **Native remote HTTP** | Just the URL | OpenAI (Responses API + Agents SDK), Claude.ai Connectors, Cursor, VS Code, Cline |
+| **stdio-only (local)** | `npx mcp-remote <url>` bridge | Claude Desktop, older IDEs |
+
+The universal endpoint is always `https://ai-pulse-newsletter.vercel.app/api/mcp`.
+The only requirement on the user's machine is **Node.js** (for `npx`), and only
+when using the stdio bridge.
+
+**OpenAI — Responses API** (point the API straight at the URL):
+
+```python
+from openai import OpenAI
+client = OpenAI()
+
+resp = client.responses.create(
+    model="gpt-5",
+    input="Find news about EU AI regulation",
+    tools=[{
+        "type": "mcp",
+        "server_label": "ai-pulse",
+        "server_url": "https://ai-pulse-newsletter.vercel.app/api/mcp",
+        "require_approval": "never",
+    }],
+)
+print(resp.output_text)
+```
+
+**OpenAI — Agents SDK** (Python):
+
+```python
+from agents import Agent, Runner
+from agents.mcp import MCPServerStreamableHttp
+
+async with MCPServerStreamableHttp(
+    params={"url": "https://ai-pulse-newsletter.vercel.app/api/mcp"}
+) as server:
+    agent = Agent(name="news", model="gpt-5", mcp_servers=[server])
+    result = await Runner.run(agent, "What has OpenAI been doing recently?")
+    print(result.final_output)
+```
+
+**Cursor / VS Code / Cline** (native HTTP config):
+
+```json
+{
+  "mcpServers": {
+    "ai-pulse": {
+      "url": "https://ai-pulse-newsletter.vercel.app/api/mcp"
+    }
+  }
+}
+```
+
+**Claude Code** (CLI):
+
+```bash
+claude mcp add --transport http ai-pulse https://ai-pulse-newsletter.vercel.app/api/mcp
+```
+
+**Claude Desktop** (and any stdio-only client) — bridge with `mcp-remote`:
 
 ```jsonc
-// Claude Desktop — %APPDATA%\Claude\claude_desktop_config.json (Windows)
+// %APPDATA%\Claude\claude_desktop_config.json (Windows)
 {
   "mcpServers": {
     "ai-pulse": {
@@ -220,13 +286,8 @@ your side beyond the query embedding).
 }
 ```
 
-```bash
-# Claude Code
-claude mcp add --transport http ai-pulse https://ai-pulse-newsletter.vercel.app/api/mcp
-```
-
-For Claude.ai with Custom Connectors, add the URL directly (no `mcp-remote`
-bridge needed). Verify any deployment end-to-end with the included test client:
+For **Claude.ai** with Custom Connectors, add the URL directly (no bridge).
+Verify any deployment end-to-end with the included test client:
 
 ```bash
 cd backend
@@ -236,6 +297,10 @@ MCP_URL=https://ai-pulse-newsletter.vercel.app/api/mcp \
 
 > **Note:** `backend/tsconfig.json` uses `module`/`moduleResolution: node16` so
 > the MCP SDK's `exports` map resolves to its CommonJS build.
+>
+> ⚠️ The `/api/mcp` endpoint is currently **public** — anyone with the URL
+> consumes your Gemini embedding quota. Add auth (API key or OAuth) and tighten
+> the rate limit before promoting it widely.
 
 ---
 
