@@ -76,3 +76,11 @@ export const chatLimiter = makeLimiter({
   windowSec: 60, max: 5, prefix: 'rl:chat',
   message: 'Too many chat requests. Please wait a moment before asking again.',
 })
+
+// Limiter for the MCP endpoint. A search (tools/call) embeds the query via the
+// Gemini API, so cap usage. Generous enough for the 3-request handshake
+// (initialize + tools/list + tools/call) clients do per search.
+export const mcpLimiter = makeLimiter({
+  windowSec: 60, max: 30, prefix: 'rl:mcp',
+  message: 'Too many MCP requests. Please slow down.',
+})

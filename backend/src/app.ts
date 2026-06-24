@@ -8,11 +8,12 @@ import { config } from './config'
 import articlesRouter    from './routes/articles'
 import authRouter        from './routes/auth'
 import chatRouter        from './routes/chat'
+import mcpRouter         from './routes/mcp'
 import newsletterRouter  from './routes/newsletter'
 import { runScraper }    from './services/scraper'
 import { authenticate, requireAdmin } from './middleware/auth'
 import { csrfProtection } from './middleware/csrf'
-import { globalLimiter, authLimiter, writeLimiter, chatLimiter } from './middleware/rateLimit'
+import { globalLimiter, authLimiter, writeLimiter, chatLimiter, mcpLimiter } from './middleware/rateLimit'
 import { notFound, errorHandler } from './middleware/errorHandler'
 
 const app = express()
@@ -41,6 +42,7 @@ const P = process.env.VERCEL ? '' : '/api'
 app.use(`${P}/auth`,       authLimiter, authRouter)
 app.use(`${P}/articles`,   articlesRouter)
 app.use(`${P}/chat`,       chatLimiter, chatRouter)
+app.use(`${P}/mcp`,        mcpLimiter, mcpRouter)
 app.use(`${P}/newsletter`, writeLimiter, newsletterRouter)
 
 app.get(`${P}/health`, (_req, res) => res.json({ status: 'ok' }))
