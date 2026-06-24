@@ -5,6 +5,7 @@ import 'tippy.js/dist/tippy.css'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import type { Article } from '../types'
 import { voteArticle, type VoteType } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 import { cn } from '../utils'
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -28,6 +29,7 @@ interface Props {
 export default function Card({ article }: Props) {
   const cardRef = useRef<HTMLElement>(null)
   const tagRef  = useRef<HTMLSpanElement>(null)
+  const { user } = useAuth()
 
   const [votesUp, setVotesUp]     = useState(article.votes_up)
   const [votesDown, setVotesDown] = useState(article.votes_down)
@@ -35,7 +37,7 @@ export default function Card({ article }: Props) {
   const [voting, setVoting]       = useState(false)
 
   const handleVote = async (type: VoteType) => {
-    if (voted || voting) return
+    if (!user || voted || voting) return
     setVoting(true)
     const result = await voteArticle(article.id, type)
     if (result.ok) {
@@ -132,12 +134,13 @@ export default function Card({ article }: Props) {
       <div className="flex items-center gap-2 mt-auto">
         <button
           onClick={() => handleVote('up')}
-          disabled={voted || voting}
-          aria-label="Upvote"
+          disabled={!user || voted || voting}
+          aria-label={user ? 'Upvote' : 'Sign in to vote'}
+          title={!user ? 'Sign in to vote' : undefined}
           className={cn(
             'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-200',
             'border-[var(--border)] text-[var(--text-2)]',
-            voted ? 'opacity-60 cursor-default' : 'hover:border-[#3ecfcf]/40 hover:text-[#3ecfcf] cursor-pointer',
+            !user ? 'opacity-40 cursor-not-allowed' : voted ? 'opacity-60 cursor-default' : 'hover:border-[#3ecfcf]/40 hover:text-[#3ecfcf] cursor-pointer',
           )}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -147,12 +150,13 @@ export default function Card({ article }: Props) {
         </button>
         <button
           onClick={() => handleVote('down')}
-          disabled={voted || voting}
-          aria-label="Downvote"
+          disabled={!user || voted || voting}
+          aria-label={user ? 'Downvote' : 'Sign in to vote'}
+          title={!user ? 'Sign in to vote' : undefined}
           className={cn(
             'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-200',
             'border-[var(--border)] text-[var(--text-2)]',
-            voted ? 'opacity-60 cursor-default' : 'hover:border-rose-500/40 hover:text-rose-500 cursor-pointer',
+            !user ? 'opacity-40 cursor-not-allowed' : voted ? 'opacity-60 cursor-default' : 'hover:border-rose-500/40 hover:text-rose-500 cursor-pointer',
           )}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

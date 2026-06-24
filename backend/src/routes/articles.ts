@@ -113,8 +113,8 @@ router.get('/:id', async (req: Request, res: Response) => {
   res.json(article)
 })
 
-// POST /api/articles/:id/vote — voto positivo o negativo
-router.post('/:id/vote', async (req: Request, res: Response) => {
+// POST /api/articles/:id/vote — voto positivo o negativo (requiere login)
+router.post('/:id/vote', authenticate, async (req: Request, res: Response) => {
   const id = parseId(req.params.id)
   if (id === null) { res.status(400).json({ error: 'ID inválido' }); return }
 
