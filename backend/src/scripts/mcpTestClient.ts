@@ -18,17 +18,22 @@ async function main() {
   const tools = await client.listTools()
   console.log(`\n🧰 tools/list → ${tools.tools.map(t => t.name).join(', ')}`)
 
-  const query = process.argv[2] || 'OpenAI'
-  console.log(`\n📞 tools/call search_articles({ query: "${query}" })`)
-  const result = await client.callTool({
-    name: 'search_articles',
-    arguments: { query },
-  })
-
-  console.log('\n📄 Result:\n')
-  for (const block of result.content as Array<{ type: string; text?: string }>) {
-    if (block.type === 'text') console.log(block.text)
+  const printResult = (result: unknown) => {
+    const blocks = ((result as { content?: unknown }).content ?? []) as Array<{ type: string; text?: string }>
+    for (const block of blocks) {
+      if (block.type === 'text') console.log(block.text)
+    }
   }
+
+  const query = process.argv[2] || 'OpenAI'
+  console.log(`\n📞 search_articles({ query: "${query}" })`)
+  printResult(await client.callTool({ name: 'search_articles', arguments: { query } }))
+
+  console.log('\n📞 get_trending({ limit: 3 })')
+  printResult(await client.callTool({ name: 'get_trending', arguments: { limit: 3 } }))
+
+  console.log('\n📞 list_recent({ category: "research", limit: 3 })')
+  printResult(await client.callTool({ name: 'list_recent', arguments: { category: 'research', limit: 3 } }))
 
   await client.close()
 }

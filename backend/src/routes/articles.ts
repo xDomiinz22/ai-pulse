@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import prisma from '../lib/prisma'
 import { redis } from '../lib/redis'
 import { cached, articlesVersion, bumpArticlesVersion } from '../lib/cache'
+import { getTrendingArticles } from '../lib/articleQueries'
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth'
 import { csrfProtection } from '../middleware/csrf'
 
@@ -67,33 +68,12 @@ router.get('/category-counts', async (_req: Request, res: Response) => {
 })
 
 // GET /api/articles/trending — artículos más votados.
-// Usa un sorted set de Redis; si no hay datos en Redis cae a Postgres por votes_up.
+// La lógica (sorted set de Redis + fallback Postgres) vive en getTrendingArticles,
+// compartida con la tool MCP get_trending.
 router.get('/trending', async (req: Request, res: Response) => {
   const limitNum = Math.min(20, Math.max(1, parseInt(String(req.query.limit)) || 5))
-
-  if (redis) {
-    try {
-      const ids = await redis.zrange<string[]>(TRENDING_KEY, 0, limitNum - 1, { rev: true })
-      if (ids && ids.length > 0) {
-        const numericIds = ids.map(Number).filter(Number.isInteger)
-        const articles = await prisma.article.findMany({ where: { id: { in: numericIds } } })
-        // Preserve the Redis ranking order.
-        const byId = new Map(articles.map(a => [a.id, a]))
-        const ordered = numericIds.map(id => byId.get(id)).filter(Boolean)
-        res.json({ data: ordered, source: 'redis' })
-        return
-      }
-    } catch (err) {
-      console.error('[trending] redis error, falling back:', (err as Error).message)
-    }
-  }
-
-  // Fallback: most up-voted articles straight from Postgres.
-  const articles = await prisma.article.findMany({
-    orderBy: { votes_up: 'desc' },
-    take: limitNum,
-  })
-  res.json({ data: articles, source: 'postgres' })
+  const data = await getTrendingArticles(limitNum)
+  res.json({ data })
 })
 
 // Parse and validate a numeric :id route param. Returns null if invalid.

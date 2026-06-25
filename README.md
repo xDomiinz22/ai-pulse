@@ -200,12 +200,14 @@ npx ts-node --files src/scripts/ai_agent.ts "What has OpenAI been doing recently
 
 ### 2. MCP server
 
-The same `search_articles` retrieval is exposed over the **Model Context
-Protocol** (Streamable HTTP, stateless) at **`POST /api/mcp`**, built with
-`@modelcontextprotocol/sdk`. MCP is an **open, model-agnostic protocol** — any
-MCP-capable agent can connect with **its own model** (Claude, OpenAI/GPT,
-Cursor, etc.). Your server only runs the search and returns data (no
-text-generation cost on your side beyond the query embedding).
+The news database is exposed over the **Model Context Protocol** (Streamable
+HTTP, stateless) at **`POST /api/mcp`**, built with `@modelcontextprotocol/sdk`.
+Three tools are available: **`search_articles`** (semantic search),
+**`get_trending`** (most-voted articles) and **`list_recent`** (latest, optionally
+by category). MCP is an **open, model-agnostic protocol** — any MCP-capable agent
+can connect with **its own model** (Claude, OpenAI/GPT, Cursor, etc.). Your server
+only runs the queries and returns data (no text-generation cost on your side
+beyond the `search_articles` query embedding).
 
 **Connecting from any environment** (Claude Code, Claude Desktop, Claude.ai,
 Cursor, VS Code, Cline, OpenAI Responses API / Agents SDK): see the
