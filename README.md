@@ -202,13 +202,22 @@ npx ts-node --files src/scripts/ai_agent.ts "What has OpenAI been doing recently
 
 The news database is exposed over the **Model Context Protocol** (Streamable
 HTTP, stateless) at **`POST /api/mcp`**, built with `@modelcontextprotocol/sdk`.
-Four tools are available: **`search_articles`** (semantic search),
-**`get_trending`** (most-voted articles), **`list_recent`** (latest, optionally
-by category) and **`get_related`** (more articles like a given URL). MCP is an
-**open, model-agnostic protocol** — any MCP-capable agent
-can connect with **its own model** (Claude, OpenAI/GPT, Cursor, etc.). Your server
-only runs the queries and returns data (no text-generation cost on your side
-beyond the `search_articles` query embedding).
+MCP is an **open, model-agnostic protocol** — any MCP-capable agent can connect
+with **its own model** (Claude, OpenAI/GPT, Cursor, etc.). Your server only runs
+the queries and returns data (no text-generation cost on your side beyond the
+`search_articles` query embedding).
+
+Four tools are available:
+
+| Tool | Input | Embedding cost | Description |
+| ---- | ----- | :------------: | ----------- |
+| `search_articles` | `query` | yes | Semantic search by topic or question (embeds the query → pgvector). |
+| `get_trending`    | `limit?` | no | Most up-voted / currently trending articles. |
+| `list_recent`     | `category?`, `limit?` | no | Latest articles, optionally filtered by category. |
+| `get_related`     | `url`, `limit?` | no | More articles like a given one, using its **stored** embedding. |
+
+All four are verified end-to-end against production by `mcpTestClient.ts` (a real
+MCP client).
 
 **Connecting from any environment** (Claude Code, Claude Desktop, Claude.ai,
 Cursor, VS Code, Cline, OpenAI Responses API / Agents SDK): see the
