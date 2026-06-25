@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { searchArticles } from './articleSearch'
+import { searchArticles, getRelatedArticles } from './articleSearch'
 import { getTrendingArticles, getRecentArticles } from './articleQueries'
 
 // ── MCP server factory ──────────────────────────────────────────────────────
@@ -111,6 +111,37 @@ export function createMcpServer(): McpServer {
       const articles = await getRecentArticles(category, limit ?? 10)
       const where = category ? ` in category "${category}"` : ''
       return articlesToContent(articles, `No recent articles${where}.`)
+    },
+  )
+
+  // ── Tool 4: related articles (uses the source article's stored embedding) ──
+  server.registerTool(
+    'get_related',
+    {
+      title: 'Get related AI news',
+      description:
+        'Given the URL of an article (e.g. one returned by another tool), return other ' +
+        'articles that are semantically related to it. Useful for "show me more like this".',
+      inputSchema: {
+        url: z
+          .string()
+          .url()
+          .describe('The exact URL of an article already in the AI Pulse database.'),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(20)
+          .optional()
+          .describe('How many related articles to return (default 5, max 20).'),
+      },
+    },
+    async ({ url, limit }) => {
+      const articles = await getRelatedArticles(url, limit ?? 5)
+      return articlesToContent(
+        articles,
+        `No related articles found for ${url}. The URL may not be in the database.`,
+      )
     },
   )
 

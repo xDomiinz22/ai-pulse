@@ -7,13 +7,14 @@
 
 ## What this server does
 
-AI Pulse exposes three tools over the Model Context Protocol (Streamable HTTP),
+AI Pulse exposes four tools over the Model Context Protocol (Streamable HTTP),
 all returning AI-news articles (title, summary, category, source, URL):
 
 - **`search_articles`** — semantic search by topic or question.
 - **`get_trending`** — the most up-voted / currently trending articles.
 - **`list_recent`** — the latest articles, optionally filtered by category
   (`model` / `research` / `industry` / `ethics`).
+- **`get_related`** — given an article URL, more articles like it.
 
 MCP is model-agnostic — it works with Claude, OpenAI/GPT, and any MCP client.
 

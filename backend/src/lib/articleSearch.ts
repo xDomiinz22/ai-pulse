@@ -25,3 +25,23 @@ export async function searchArticles(query: string, k = 5): Promise<FoundArticle
     LIMIT ${k}
   `
 }
+
+// Articles semantically related to an existing one, identified by its URL. Uses
+// that article's STORED embedding as the query vector, so no new embedding is
+// generated (zero model cost). Returns [] if the URL isn't in the database or
+// has no embedding.
+export async function getRelatedArticles(url: string, k = 5): Promise<FoundArticle[]> {
+  return prisma.$queryRaw<FoundArticle[]>`
+    SELECT a.id, a.title, a.short_summary, a.category, a.source, a.url,
+           a.embedding <=> src.embedding AS distance
+    FROM articles a
+    CROSS JOIN (
+      SELECT embedding FROM articles
+      WHERE url = ${url} AND embedding IS NOT NULL
+      LIMIT 1
+    ) src
+    WHERE a.url <> ${url} AND a.embedding IS NOT NULL
+    ORDER BY distance ASC
+    LIMIT ${k}
+  `
+}

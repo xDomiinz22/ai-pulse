@@ -35,6 +35,15 @@ async function main() {
   console.log('\n📞 list_recent({ category: "research", limit: 3 })')
   printResult(await client.callTool({ name: 'list_recent', arguments: { category: 'research', limit: 3 } }))
 
+  // Chain: take a URL from the search results and ask for related articles.
+  const firstSearch = await client.callTool({ name: 'search_articles', arguments: { query } })
+  const firstText = ((firstSearch as { content?: Array<{ text?: string }> }).content?.[0]?.text) ?? ''
+  const sampleUrl = firstText.match(/https?:\/\/\S+/)?.[0]
+  if (sampleUrl) {
+    console.log(`\n📞 get_related({ url: "${sampleUrl}", limit: 3 })`)
+    printResult(await client.callTool({ name: 'get_related', arguments: { url: sampleUrl, limit: 3 } }))
+  }
+
   await client.close()
 }
 

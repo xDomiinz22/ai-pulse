@@ -202,9 +202,10 @@ npx ts-node --files src/scripts/ai_agent.ts "What has OpenAI been doing recently
 
 The news database is exposed over the **Model Context Protocol** (Streamable
 HTTP, stateless) at **`POST /api/mcp`**, built with `@modelcontextprotocol/sdk`.
-Three tools are available: **`search_articles`** (semantic search),
-**`get_trending`** (most-voted articles) and **`list_recent`** (latest, optionally
-by category). MCP is an **open, model-agnostic protocol** — any MCP-capable agent
+Four tools are available: **`search_articles`** (semantic search),
+**`get_trending`** (most-voted articles), **`list_recent`** (latest, optionally
+by category) and **`get_related`** (more articles like a given URL). MCP is an
+**open, model-agnostic protocol** — any MCP-capable agent
 can connect with **its own model** (Claude, OpenAI/GPT, Cursor, etc.). Your server
 only runs the queries and returns data (no text-generation cost on your side
 beyond the `search_articles` query embedding).
