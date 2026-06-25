@@ -207,86 +207,12 @@ MCP-capable agent can connect with **its own model** (Claude, OpenAI/GPT,
 Cursor, etc.). Your server only runs the search and returns data (no
 text-generation cost on your side beyond the query embedding).
 
-#### Connecting from any environment
+**Connecting from any environment** (Claude Code, Claude Desktop, Claude.ai,
+Cursor, VS Code, Cline, OpenAI Responses API / Agents SDK): see the
+self-contained guide in **[MCP-INSTALL.md](MCP-INSTALL.md)** — you can also hand
+that file straight to an AI agent and it will configure the connection itself.
+The universal endpoint is `https://ai-pulse-newsletter.vercel.app/api/mcp`.
 
-There is nothing to install on the server side — it's already hosted. What
-differs per environment is the **client config**, and they fall into two groups:
-
-| Client type | How it connects | Examples |
-| ----------- | --------------- | -------- |
-| **Native remote HTTP** | Just the URL | OpenAI (Responses API + Agents SDK), Claude.ai Connectors, Cursor, VS Code, Cline |
-| **stdio-only (local)** | `npx mcp-remote <url>` bridge | Claude Desktop, older IDEs |
-
-The universal endpoint is always `https://ai-pulse-newsletter.vercel.app/api/mcp`.
-The only requirement on the user's machine is **Node.js** (for `npx`), and only
-when using the stdio bridge.
-
-**OpenAI — Responses API** (point the API straight at the URL):
-
-```python
-from openai import OpenAI
-client = OpenAI()
-
-resp = client.responses.create(
-    model="gpt-5",
-    input="Find news about EU AI regulation",
-    tools=[{
-        "type": "mcp",
-        "server_label": "ai-pulse",
-        "server_url": "https://ai-pulse-newsletter.vercel.app/api/mcp",
-        "require_approval": "never",
-    }],
-)
-print(resp.output_text)
-```
-
-**OpenAI — Agents SDK** (Python):
-
-```python
-from agents import Agent, Runner
-from agents.mcp import MCPServerStreamableHttp
-
-async with MCPServerStreamableHttp(
-    params={"url": "https://ai-pulse-newsletter.vercel.app/api/mcp"}
-) as server:
-    agent = Agent(name="news", model="gpt-5", mcp_servers=[server])
-    result = await Runner.run(agent, "What has OpenAI been doing recently?")
-    print(result.final_output)
-```
-
-**Cursor / VS Code / Cline** (native HTTP config):
-
-```json
-{
-  "mcpServers": {
-    "ai-pulse": {
-      "url": "https://ai-pulse-newsletter.vercel.app/api/mcp"
-    }
-  }
-}
-```
-
-**Claude Code** (CLI):
-
-```bash
-claude mcp add --transport http ai-pulse https://ai-pulse-newsletter.vercel.app/api/mcp
-```
-
-**Claude Desktop** (and any stdio-only client) — bridge with `mcp-remote`:
-
-```jsonc
-// %APPDATA%\Claude\claude_desktop_config.json (Windows)
-{
-  "mcpServers": {
-    "ai-pulse": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://ai-pulse-newsletter.vercel.app/api/mcp"]
-    }
-  }
-}
-```
-
-For **Claude.ai** with Custom Connectors, add the URL directly (no bridge).
 Verify any deployment end-to-end with the included test client:
 
 ```bash
