@@ -57,14 +57,23 @@ export default function App() {
   const fuse = useMemo(
     () => new Fuse(articles, {
       keys: [{ name: 'title', weight: 0.7 }, { name: 'short_summary', weight: 0.3 }],
-      threshold: 0.35,
+      threshold: 0.45,
+      ignoreLocation: true,
     }),
     [articles]
   )
 
   const visibleArticles = useMemo(() => {
     if (!query.trim()) return articles
-    return fuse.search(query).map(r => r.item)
+    // Strip internal spaces so "Open AI" matches "OpenAI", "GPT 4" matches "GPT-4", etc.
+    const q = query.trim()
+    const qCompact = q.replace(/\s+/g, '')
+    const results = fuse.search(q)
+    if (qCompact !== q) {
+      const seen = new Set(results.map(r => r.item.id))
+      fuse.search(qCompact).forEach(r => { if (!seen.has(r.item.id)) results.push(r) })
+    }
+    return results.map(r => r.item)
   }, [articles, fuse, query])
 
   return (

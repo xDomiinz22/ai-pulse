@@ -29,10 +29,13 @@ router.get('/', async (req: Request, res: Response) => {
     const where: Record<string, unknown> = {}
     if (category && category !== 'all') where.category = category
     if (q) {
-      where.OR = [
-        { title:         { contains: q, mode: 'insensitive' } },
-        { short_summary: { contains: q, mode: 'insensitive' } },
-      ]
+      // Also search without spaces so "Open AI" matches "OpenAI", "GPT 4" matches "GPT-4", etc.
+      const qCompact = q.replace(/\s+/g, '')
+      const variants = qCompact !== q ? [q, qCompact] : [q]
+      where.OR = variants.flatMap(v => [
+        { title:         { contains: v, mode: 'insensitive' } },
+        { short_summary: { contains: v, mode: 'insensitive' } },
+      ])
     }
 
     const [articles, total] = await Promise.all([
