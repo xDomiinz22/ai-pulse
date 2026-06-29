@@ -2,13 +2,6 @@ import { useEffect, useState, useCallback } from 'react'
 import type { Article } from '../types'
 import { API, ARTICLE_VOTED_EVENT } from '../lib/api'
 
-const DOT: Record<string, string> = {
-  model:    'bg-[#6c63ff]',
-  research: 'bg-[#3ecfcf]',
-  industry: 'bg-amber-500',
-  ethics:   'bg-rose-500',
-}
-
 export default function Trending() {
   const [items, setItems] = useState<Article[]>([])
 
@@ -17,50 +10,46 @@ export default function Trending() {
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
         if (!data) return
-        // Only show genuinely trending articles (at least one upvote).
         setItems((data.data as Article[]).filter(a => (a.votes_up ?? 0) > 0))
       })
       .catch(console.error)
   }, [])
 
-  // Load on mount, then refresh whenever an article is voted anywhere in the
-  // page so the ranking reflects the new counts instantly (no reload needed).
   useEffect(() => {
     load()
     window.addEventListener(ARTICLE_VOTED_EVENT, load)
     return () => window.removeEventListener(ARTICLE_VOTED_EVENT, load)
   }, [load])
 
-  // Nothing trending yet → don't render the section at all.
   if (items.length === 0) return null
 
   return (
-    <section className="mb-10">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-base">🔥</span>
-        <h2 className="font-head text-[18px] font-semibold text-[var(--text-1)]">Trending</h2>
+    <section className="mb-12">
+      {/* Section header, set like a newspaper rubric */}
+      <div className="flex items-center gap-3 mb-4 rule-bottom pb-2">
+        <h2 className="font-display text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--ink)]">
+          Trending
+        </h2>
+        <span className="wire">Most read this week</span>
       </div>
 
-      <ol className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <ol className="grid sm:grid-cols-2 gap-x-8">
         {items.map((a, i) => (
-          <li key={a.id}>
+          <li key={a.id} className="border-b border-[var(--rule)] last:border-0 sm:[&:nth-last-child(2)]:border-0">
             <a
               href={a.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl p-3.5 bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-card-h)] hover:border-[var(--border-h)] transition-colors duration-200"
+              className="group flex items-baseline gap-4 py-3.5"
             >
-              <span className="font-head text-[20px] font-bold text-[var(--text-3)] w-6 flex-shrink-0 text-center">
+              <span className="font-display text-[28px] font-black leading-none text-[var(--rule-strong)] w-8 flex-none text-right group-hover:text-[var(--spot)] transition-colors">
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-[var(--text-1)] leading-snug line-clamp-2">
+                <p className="font-body text-[15px] leading-snug text-[var(--ink)] line-clamp-2 group-hover:text-[var(--spot)] transition-colors">
                   {a.title}
                 </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${DOT[a.category]}`} />
-                  <span className="text-[11px] text-[var(--text-3)]">{a.votes_up} votes</span>
-                </div>
+                <span className="wire mt-1 block">{a.votes_up} {a.votes_up === 1 ? 'vote' : 'votes'}</span>
               </div>
             </a>
           </li>

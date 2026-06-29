@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Fuse from 'fuse.js'
-import { useTheme } from './hooks/useTheme'
 import type { Article, FilterValue } from './types'
 import Header from './components/Header'
+import Ticker from './components/Ticker'
 import Hero from './components/Hero'
 import FilterBar from './components/FilterBar'
 import NewsGrid from './components/NewsGrid'
@@ -12,7 +12,6 @@ import ChatWidget from './components/ChatWidget'
 import { API } from './lib/api'
 
 export default function App() {
-  const [theme, toggleTheme] = useTheme()
   const [filter, setFilter]  = useState<FilterValue>('all')
   const [query,  setQuery]   = useState('')
   const [articles, setArticles] = useState<Article[]>([])
@@ -71,11 +70,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)] transition-colors duration-300">
       <Header
-        theme={theme}
-        onThemeToggle={toggleTheme}
         query={query}
         onQueryChange={setQuery}
       />
+      <Ticker />
 
       <main>
         <Hero />
@@ -85,12 +83,12 @@ export default function App() {
 
             <Trending />
 
-            <div className="flex items-baseline gap-3.5 mb-5">
-              <h2 className="font-head text-[22px] font-semibold text-[var(--text-1)]">
-                Latest news
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="font-display text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--ink)]">
+                Latest News
               </h2>
               {!loading && (
-                <span className="text-[13px] text-[var(--text-3)]">
+                <span className="wire">
                   {visibleArticles.length} article{visibleArticles.length !== 1 ? 's' : ''}
                 </span>
               )}

@@ -1,99 +1,132 @@
 @import "tailwindcss";
 
-/* ── Dark mode: se activa añadiendo la clase .dark al elemento <html> ── */
-@variant dark (&:is(.dark *));
-
-/* ── Fuentes personalizadas ─────────────────────────────────────────── */
+/* ── Typefaces ───────────────────────────────────────────────────────────
+   Fraunces  → editorial display serif (masthead, headlines)
+   Newsreader → news body serif (article text, ledes)
+   IBM Plex Mono → the "wire/teletype" voice (datelines, sources, labels) */
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-head: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body:    'Newsreader', Georgia, serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* Legacy aliases kept so existing utility classes keep resolving. */
+  --font-sans:    'Newsreader', Georgia, serif;
+  --font-head:    'Fraunces', Georgia, 'Times New Roman', serif;
 }
 
-/* ── Tokens de color: modo claro por defecto ────────────────────────── */
+/* ── Color tokens: ink on newsprint (light only) ─────────────────────────
+   Newsprint is a warm grey-beige, not cream; ink is a warm near-black, not
+   pure #000; one spot color (oxidized printing red) used very sparingly. */
 :root {
-  --bg:        #f2f2f8;
-  --bg-card:   #ffffff;
-  --bg-card-h: #f0f0fa;
-  --border:    rgba(0,0,0,0.08);
-  --border-h:  rgba(0,0,0,0.16);
-  --text-1:    #0d0d1a;
-  --text-2:    #52527a;
-  --text-3:    #9898b0;
-  --header-bg: rgba(242,242,248,0.88);
+  --paper:    #e9e1d0;  /* page background, newsprint */
+  --clip:     #f3eddf;  /* clippings / cards, a touch lighter */
+  --clip-h:   #efe7d4;  /* clipping hover */
+  --ink:      #211b16;  /* primary text, warm near-black */
+  --ink-soft: #6b6155;  /* secondary text, faded ink */
+  --ink-mute: #948a79;  /* tertiary / captions */
+  --rule:     #ccc1ab;  /* hairline rules */
+  --rule-strong: #b6a98f;
+  --spot:     #a23b2b;  /* printing red — live dot, accents, sparing */
+
+  /* Legacy aliases repointed to the paper palette so components that still
+     reference --bg / --text-1 etc. render correctly during the migration. */
+  --bg:        var(--paper);
+  --bg-card:   var(--clip);
+  --bg-card-h: var(--clip-h);
+  --border:    var(--rule);
+  --border-h:  var(--rule-strong);
+  --text-1:    var(--ink);
+  --text-2:    var(--ink-soft);
+  --text-3:    var(--ink-mute);
+  --header-bg: rgba(233, 225, 208, 0.92);
 }
 
-/* ── Tokens de color: modo oscuro ───────────────────────────────────── */
-.dark {
-  --bg:        #0a0a0f;
-  --bg-card:   #111118;
-  --bg-card-h: #16161f;
-  --border:    rgba(255,255,255,0.07);
-  --border-h:  rgba(255,255,255,0.14);
-  --text-1:    #f0f0f5;
-  --text-2:    #9898b0;
-  --text-3:    #5c5c78;
-  --header-bg: rgba(10,10,15,0.85);
-}
-
-/* ── Base ────────────────────────────────────────────────────────────── */
-/* Dentro de @layer base: estas reglas ceden ante las utilidades de Tailwind.
-   El Preflight de Tailwind ya hace el reset de margin/padding/box-sizing,
-   así que solo añadimos lo que no trae por defecto. */
+/* ── Base ────────────────────────────────────────────────────────────────── */
 @layer base {
   html { scroll-behavior: smooth; }
-  body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background-color: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
   a { text-decoration: none; color: inherit; }
+  /* Editorial defaults: headings in the display serif. */
+  h1, h2, h3 { font-family: var(--font-display); }
 }
 
-/* ── Utilidades que Tailwind no puede expresar limpiamente ──────────── */
-.gradient-text {
-  background: linear-gradient(90deg, #6c63ff, #3ecfcf);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hero-blur {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
+/* Faint newsprint grain so the paper never reads as a flat AI cream fill. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* GSAP necesita display:inline-block para animar palabras con translateY */
+/* ── Editorial helpers ───────────────────────────────────────────────────── */
+
+/* Mono label — datelines, sources, eyebrows, "wire" metadata. */
+.wire {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* A pair of rules above/below a row, the way a masthead folio is set. */
+.rule-top    { border-top: 1px solid var(--rule); }
+.rule-bottom { border-bottom: 1px solid var(--rule); }
+
+/* The old gradient headline is now flat ink with an italic spot flourish. */
+.gradient-text { color: var(--spot); font-style: italic; }
+
+/* GSAP word reveal helper. */
 .gsap-word { display: inline-block; }
 
-/* ── Campos de formulario (modal de auth) ───────────────────────────── */
+/* ── Form fields (auth modal) — paper styled ─────────────────────────────── */
 .input-field {
   width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
   padding: 10px 12px;
-  font-size: 14px;
-  color: var(--text-1);
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink);
   outline: none;
   transition: border-color .2s, box-shadow .2s;
 }
-.input-field::placeholder { color: var(--text-3); }
+.input-field::placeholder { color: var(--ink-mute); }
 .input-field:focus {
-  border-color: #6c63ff;
-  box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  border-color: var(--spot);
+  box-shadow: 0 0 0 3px rgba(162, 59, 43, 0.12);
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: .5; transform: scale(.8); }
+  50%      { opacity: .4; transform: scale(.8); }
 }
 .live-dot { animation: pulse 1.8s ease-in-out infinite; }
 
-/* ── Tippy: tema personalizado ──────────────────────────────────────── */
-.tippy-box[data-theme~='aipulse'] {
-  background: var(--bg-card);
-  color: var(--text-1);
-  border: 1px solid var(--border-h);
-  font-size: 12px;
-  font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+  html { scroll-behavior: auto; }
 }
-.tippy-box[data-theme~='aipulse'] .tippy-arrow { color: var(--bg-card); }
+
+/* ── Tippy: paper theme ──────────────────────────────────────────────────── */
+.tippy-box[data-theme~='aipulse'] {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 20px rgba(33, 27, 22, .25);
+}
+.tippy-box[data-theme~='aipulse'] .tippy-arrow { color: var(--ink); }

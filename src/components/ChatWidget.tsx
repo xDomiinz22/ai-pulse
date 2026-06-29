@@ -54,8 +54,8 @@ function Bubble({ msg }: { msg: Message }) {
         transition={{ duration: 0.22 }}
       >
         <div
-          className="max-w-[80%] rounded-2xl rounded-br-sm px-4 py-2.5 text-[13.5px] leading-[1.65] text-white"
-          style={{ background: 'linear-gradient(135deg,#6c63ff,#3ecfcf)' }}
+          className="max-w-[80%] rounded-md px-4 py-2.5 text-[13.5px] leading-[1.6] font-body text-[var(--paper)]"
+          style={{ background: 'var(--ink)' }}
         >
           {msg.text}
         </div>
@@ -71,7 +71,7 @@ function Bubble({ msg }: { msg: Message }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22 }}
       >
-        <div className="max-w-[85%] rounded-2xl rounded-bl-sm px-4 py-2.5 text-[13px] leading-[1.65] bg-rose-500/10 border border-rose-500/20 text-rose-400">
+        <div className="max-w-[85%] rounded-md px-4 py-2.5 text-[13px] leading-[1.65] bg-[var(--clip)] border border-[var(--spot)] text-[var(--spot)]">
           {msg.text}
         </div>
       </motion.div>
@@ -88,7 +88,7 @@ function Bubble({ msg }: { msg: Message }) {
       {/* AI avatar */}
       <div
         className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full mt-0.5"
-        style={{ background: 'linear-gradient(135deg,#6c63ff,#3ecfcf)' }}
+        style={{ background: 'var(--ink)' }}
       >
         <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
           <circle cx="10" cy="10" r="3" fill="white" />
@@ -99,7 +99,7 @@ function Bubble({ msg }: { msg: Message }) {
         </svg>
       </div>
 
-      <div className="max-w-[82%] rounded-2xl rounded-bl-sm px-4 py-2.5 text-[13.5px] leading-[1.7] bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-1)]">
+      <div className="max-w-[82%] rounded-md px-4 py-2.5 text-[14px] leading-[1.7] font-body bg-[var(--clip)] border border-[var(--rule)] text-[var(--ink)]">
         <ReactMarkdown
           components={{
             p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
@@ -112,13 +112,13 @@ function Bubble({ msg }: { msg: Message }) {
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#6c63ff] hover:text-[#3ecfcf] underline underline-offset-2 transition-colors"
+                className="text-[var(--spot)] hover:opacity-70 underline underline-offset-2 transition-opacity"
               >
                 {children}
               </a>
             ),
             code: ({ children }) => (
-              <code className="bg-[var(--bg)] px-1 py-0.5 rounded text-[12px] font-mono text-[#3ecfcf]">
+              <code className="bg-[var(--paper)] border border-[var(--rule)] px-1 py-0.5 rounded-sm text-[12px] font-mono text-[var(--ink)]">
                 {children}
               </code>
             ),
@@ -212,8 +212,8 @@ export default function ChatWidget() {
       {/* ── Floating action button ── */}
       <motion.button
         onClick={() => setOpen(o => !o)}
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full text-white shadow-[0_8px_30px_rgba(108,99,255,0.45)] cursor-pointer"
-        style={{ background: 'linear-gradient(135deg,#6c63ff,#3ecfcf)' }}
+        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full text-[var(--paper)] shadow-[0_8px_24px_rgba(33,27,22,0.4)] cursor-pointer"
+        style={{ background: 'var(--ink)' }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.93 }}
         aria-label="Open AI chat"
@@ -254,8 +254,8 @@ export default function ChatWidget() {
         {open && (
           <motion.div
             ref={panelRef}
-            className="fixed bottom-24 right-6 z-50 flex flex-col w-[370px] rounded-2xl overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.35)] border border-[var(--border)]"
-            style={{ height: '540px', background: 'var(--bg)' }}
+            className="fixed bottom-24 right-6 z-50 flex flex-col w-[370px] rounded-md overflow-hidden shadow-[0_20px_50px_rgba(33,27,22,0.3)] border border-[var(--rule-strong)]"
+            style={{ height: '540px', background: 'var(--paper)' }}
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -268,7 +268,7 @@ export default function ChatWidget() {
             >
               <div
                 className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg,#6c63ff,#3ecfcf)' }}
+                style={{ background: 'var(--ink)' }}
               >
                 <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
                   <circle cx="10" cy="10" r="3" fill="white" />
@@ -313,21 +313,15 @@ export default function ChatWidget() {
                   transition={{ delay: 0.1 }}
                 >
                   <div
-                    className="flex items-center justify-center w-14 h-14 rounded-2xl mb-1"
-                    style={{ background: 'linear-gradient(135deg,rgba(108,99,255,0.15),rgba(62,207,207,0.15))', border: '1px solid rgba(108,99,255,0.2)' }}
+                    className="flex items-center justify-center w-14 h-14 rounded-md mb-1"
+                    style={{ background: 'var(--clip)', border: '1px solid var(--rule-strong)' }}
                   >
                     <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="10" r="3" fill="url(#g)" />
-                      <circle cx="10" cy="2" r="1.5" fill="url(#g)" opacity=".5" />
-                      <circle cx="10" cy="18" r="1.5" fill="url(#g)" opacity=".5" />
-                      <circle cx="2" cy="10" r="1.5" fill="url(#g)" opacity=".5" />
-                      <circle cx="18" cy="10" r="1.5" fill="url(#g)" opacity=".5" />
-                      <defs>
-                        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                          <stop stopColor="#6c63ff" />
-                          <stop offset="1" stopColor="#3ecfcf" />
-                        </linearGradient>
-                      </defs>
+                      <circle cx="10" cy="10" r="3" fill="var(--ink)" />
+                      <circle cx="10" cy="2" r="1.5" fill="var(--ink)" opacity=".5" />
+                      <circle cx="10" cy="18" r="1.5" fill="var(--ink)" opacity=".5" />
+                      <circle cx="2" cy="10" r="1.5" fill="var(--ink)" opacity=".5" />
+                      <circle cx="18" cy="10" r="1.5" fill="var(--ink)" opacity=".5" />
                     </svg>
                   </div>
                   <p className="text-[13px] font-semibold text-[var(--text-1)] font-head">
@@ -343,7 +337,7 @@ export default function ChatWidget() {
                       <button
                         key={s}
                         onClick={() => sendMessage(s)}
-                        className="text-left text-[12px] text-[var(--text-2)] bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 hover:border-[#6c63ff]/40 hover:text-[var(--text-1)] transition-all duration-200 cursor-pointer leading-snug"
+                        className="text-left text-[12.5px] font-body text-[var(--ink-soft)] bg-[var(--clip)] border border-[var(--rule)] rounded-sm px-3.5 py-2.5 hover:border-[var(--spot)] hover:text-[var(--ink)] transition-colors duration-200 cursor-pointer leading-snug"
                       >
                         {s}
                       </button>
@@ -366,7 +360,7 @@ export default function ChatWidget() {
                 >
                   <div
                     className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full"
-                    style={{ background: 'linear-gradient(135deg,#6c63ff,#3ecfcf)' }}
+                    style={{ background: 'var(--ink)' }}
                   >
                     <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
                       <circle cx="10" cy="10" r="3" fill="white" />
@@ -376,7 +370,7 @@ export default function ChatWidget() {
                       <circle cx="18" cy="10" r="1.5" fill="white" opacity=".5" />
                     </svg>
                   </div>
-                  <div className="rounded-2xl rounded-bl-sm bg-[var(--bg-card)] border border-[var(--border)]">
+                  <div className="rounded-md bg-[var(--clip)] border border-[var(--rule)]">
                     <TypingDots />
                   </div>
                 </motion.div>
@@ -390,7 +384,7 @@ export default function ChatWidget() {
               className="flex-shrink-0 px-3 py-3"
               style={{ borderTop: '1px solid var(--border)' }}
             >
-              <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2 transition-all duration-200 focus-within:border-[#6c63ff]/60 focus-within:shadow-[0_0_0_3px_rgba(108,99,255,0.1)]">
+              <div className="flex items-center gap-2 bg-[var(--clip)] border border-[var(--rule-strong)] rounded-md px-3 py-2 transition-all duration-200 focus-within:border-[var(--spot)] focus-within:shadow-[0_0_0_3px_rgba(162,59,43,0.12)]">
                 <textarea
                   ref={textareaRef}
                   rows={1}
@@ -399,14 +393,14 @@ export default function ChatWidget() {
                   onKeyDown={handleKeyDown}
                   disabled={loading}
                   placeholder="Ask about AI news…"
-                  className="flex-1 resize-none bg-transparent text-[13.5px] text-[var(--text-1)] placeholder:text-[var(--text-3)] outline-none leading-[1.5] max-h-[120px] disabled:opacity-50"
+                  className="flex-1 resize-none bg-transparent font-mono text-[12.5px] text-[var(--ink)] placeholder:text-[var(--ink-mute)] outline-none leading-[1.5] max-h-[120px] disabled:opacity-50"
                   style={{ scrollbarWidth: 'none' }}
                 />
                 <button
                   onClick={() => sendMessage(input)}
                   disabled={loading || !input.trim()}
-                  className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-default enabled:cursor-pointer enabled:hover:opacity-90 enabled:active:scale-90"
-                  style={{ background: 'linear-gradient(135deg,#6c63ff,#3ecfcf)' }}
+                  className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-md text-[var(--paper)] transition-all duration-200 disabled:opacity-30 disabled:cursor-default enabled:cursor-pointer enabled:hover:opacity-90 enabled:active:scale-90"
+                  style={{ background: 'var(--ink)' }}
                   aria-label="Send"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

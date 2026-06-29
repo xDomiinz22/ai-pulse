@@ -3,12 +3,12 @@ import tippy from 'tippy.js'
 import type { FilterValue, Category } from '../types'
 import { cn } from '../utils'
 
-const FILTERS: { value: FilterValue; label: string; dot?: string }[] = [
+const FILTERS: { value: FilterValue; label: string }[] = [
   { value: 'all',      label: 'All' },
-  { value: 'model',    label: 'Models',   dot: 'bg-[#6c63ff]' },
-  { value: 'research', label: 'Research', dot: 'bg-[#3ecfcf]' },
-  { value: 'industry', label: 'Industry', dot: 'bg-amber-500' },
-  { value: 'ethics',   label: 'Ethics',   dot: 'bg-rose-500' },
+  { value: 'model',    label: 'Models' },
+  { value: 'research', label: 'Research' },
+  { value: 'industry', label: 'Industry' },
+  { value: 'ethics',   label: 'Ethics' },
 ]
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -27,8 +27,6 @@ interface Props {
 export default function FilterBar({ active, onChange, counts }: Props) {
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
 
-  // Tippy on each category button showing the real article count.
-  // Depends on `counts` so tooltips are (re)created once the data arrives.
   useEffect(() => {
     const instances = FILTERS.flatMap((f, i) => {
       if (f.value === 'all') return []
@@ -47,22 +45,20 @@ export default function FilterBar({ active, onChange, counts }: Props) {
   }, [counts])
 
   return (
-    <div className="flex flex-wrap gap-2 mb-7" role="group" aria-label="Filter by category">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-7 rule-bottom pb-3" role="group" aria-label="Filter by section">
       {FILTERS.map((f, i) => (
         <button
           key={f.value}
           ref={el => { btnRefs.current[i] = el }}
           onClick={() => onChange(f.value)}
           className={cn(
-            'inline-flex items-center gap-1.5 px-4 py-[7px] rounded-full border text-[13px] font-medium',
-            'transition-all duration-200 cursor-pointer',
+            'font-mono text-[12px] uppercase tracking-[0.1em] pb-1 -mb-[13px] border-b-2 transition-colors cursor-pointer',
             active === f.value
-              ? 'bg-[#6c63ff] border-[#6c63ff] text-white'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--bg-card-h)] hover:text-[var(--text-1)] hover:-translate-y-px',
+              ? 'text-[var(--ink)] border-[var(--spot)]'
+              : 'text-[var(--ink-soft)] border-transparent hover:text-[var(--ink)]',
           )}
           aria-label={`Filter by ${f.label}`}
         >
-          {f.dot && <span className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', f.dot)} />}
           {f.label}
         </button>
       ))}
