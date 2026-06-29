@@ -12,7 +12,8 @@ interface Props {
 
 type Mode = 'login' | 'register'
 
-const STRENGTH_COLORS = ['#ef4444', '#ef4444', '#f59e0b', '#3ecfcf', '#22c55e']
+// Earthy strength ramp (weak → strong) that sits on the paper palette.
+const STRENGTH_COLORS = ['#a23b2b', '#a23b2b', '#b07d2b', '#5f7d4f', '#4a6d39']
 
 export default function AuthModal({ open, onClose }: Props) {
   const { login, register, googleLogin } = useAuth()
@@ -94,17 +95,17 @@ export default function AuthModal({ open, onClose }: Props) {
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(33,27,22,0.55)', backdropFilter: 'blur(3px)' }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[400px] rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-7 shadow-2xl"
+        className="w-full max-w-[400px] rounded-md border border-[var(--rule-strong)] bg-[var(--paper)] p-7 shadow-[0_24px_60px_rgba(33,27,22,0.4)]"
         onClick={e => e.stopPropagation()}
       >
-        <h2 className="font-head text-[22px] font-semibold text-[var(--text-1)] mb-1">
+        <h2 className="font-display text-[26px] font-black text-[var(--ink)] leading-none mb-2">
           {mode === 'login' ? 'Welcome back' : 'Create account'}
         </h2>
-        <p className="text-[13px] text-[var(--text-3)] mb-6">
+        <p className="wire mb-6">
           {mode === 'login' ? 'Sign in to AI Pulse' : 'Join AI Pulse'}
         </p>
 
@@ -182,30 +183,30 @@ export default function AuthModal({ open, onClose }: Props) {
                 className="input-field"
               />
               {confirm && !passwordsMatch && (
-                <p className="-mt-2 text-[11px] text-rose-500">Passwords do not match</p>
+                <p className="-mt-2 text-[11px] text-[var(--spot)]">Passwords do not match</p>
               )}
             </>
           )}
 
-          {error && <p className="text-[13px] text-rose-500">{error}</p>}
+          {error && <p className="font-body text-[13px] text-[var(--spot)]">{error}</p>}
 
           <button
             type="submit"
             disabled={busy || (mode === 'register' && !canRegister)}
             className={cn(
-              'mt-1 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-opacity duration-200',
-              'bg-[#6c63ff] hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer',
+              'mt-1 rounded-md px-4 py-2.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--paper)] transition-opacity duration-200',
+              'bg-[var(--ink)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
             )}
           >
             {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
-        <p className="text-[13px] text-[var(--text-3)] mt-5 text-center">
+        <p className="font-body text-[14px] text-[var(--ink-soft)] mt-5 text-center">
           {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button
             onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-            className="font-semibold text-[#6c63ff] hover:text-[#3ecfcf] transition-colors cursor-pointer"
+            className="font-semibold text-[var(--spot)] hover:opacity-70 transition-opacity cursor-pointer"
           >
             {mode === 'login' ? 'Sign up' : 'Sign in'}
           </button>
