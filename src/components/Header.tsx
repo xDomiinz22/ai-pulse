@@ -10,7 +10,6 @@ interface Props {
 
 export default function Header({ query, onQueryChange }: Props) {
   const liveRef = useRef<HTMLSpanElement>(null)
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { user, loading, logout, openAuthModal } = useAuth()
 
@@ -26,10 +25,6 @@ export default function Header({ query, onQueryChange }: Props) {
     return () => instance.destroy()
   }, [])
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current)
-    debounceTimer.current = setTimeout(() => onQueryChange(e.target.value), 200)
-  }
 
   return (
     <header className="relative z-10 bg-[var(--paper)]">
@@ -48,8 +43,8 @@ export default function Header({ query, onQueryChange }: Props) {
               </svg>
               <input
                 type="search"
-                defaultValue={query}
-                onChange={handleInput}
+                value={query}
+                onChange={e => onQueryChange(e.target.value)}
                 placeholder="SEARCH"
                 autoComplete="off"
                 className="bg-transparent border-b border-[var(--rule-strong)] pl-5 pr-1 py-1 w-28 focus:w-40 outline-none transition-all duration-300 font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ink)] placeholder:text-[var(--ink-mute)] focus:border-[var(--spot)]"

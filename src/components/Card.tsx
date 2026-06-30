@@ -24,10 +24,12 @@ export default function Card({ article, featured = false }: Props) {
   const [votesDown, setVotesDown] = useState(article.votes_down)
   const [voted, setVoted]         = useState(false)
   const [voting, setVoting]       = useState(false)
+  const [voteError, setVoteError] = useState(false)
 
   const handleVote = async (type: VoteType) => {
     if (!user || voted || voting) return
     setVoting(true)
+    setVoteError(false)
     const result = await voteArticle(article.id, type)
     if (result.ok) {
       if (result.votes_up !== undefined)   setVotesUp(result.votes_up)
@@ -35,6 +37,9 @@ export default function Card({ article, featured = false }: Props) {
       setVoted(true)
     } else if (result.alreadyVoted) {
       setVoted(true)
+    } else {
+      setVoteError(true)
+      setTimeout(() => setVoteError(false), 3000)
     }
     setVoting(false)
   }
@@ -94,6 +99,8 @@ export default function Card({ article, featured = false }: Props) {
           </button>
         ) : voted ? (
           <span className="wire text-[var(--ink-soft)]">Thanks for voting</span>
+        ) : voteError ? (
+          <span className="wire text-[var(--spot)]">Couldn't record vote — try again</span>
         ) : (
           <>
             <button

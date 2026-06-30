@@ -30,12 +30,23 @@ function TypingDots() {
       {[0, 1, 2].map(i => (
         <motion.span
           key={i}
-          className="w-[7px] h-[7px] rounded-full bg-[var(--ink-mute)]"
+          className="w-[7px] h-[7px] bg-[var(--ink-mute)]"
           animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
           transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
         />
       ))}
     </div>
+  )
+}
+
+// Transmission icon — three horizontal rules suggesting teletype output, Wire Room voice
+function TransmissionIcon({ size = 13, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={Math.round(size * 0.77)} viewBox="0 0 13 10" fill="none" aria-hidden="true">
+      <line x1="0" y1="1" x2="13" y2="1" stroke={color} strokeWidth="1.6" strokeLinecap="square" />
+      <line x1="0" y1="5" x2="9"  y2="5" stroke={color} strokeWidth="1.6" strokeLinecap="square" />
+      <line x1="0" y1="9" x2="11" y2="9" stroke={color} strokeWidth="1.6" strokeLinecap="square" />
+    </svg>
   )
 }
 
@@ -87,16 +98,10 @@ function Bubble({ msg }: { msg: Message }) {
     >
       {/* AI avatar */}
       <div
-        className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full mt-0.5"
+        className="flex-shrink-0 flex items-center justify-center w-7 h-7 mt-0.5"
         style={{ background: 'var(--ink)' }}
       >
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="3" fill="white" />
-          <circle cx="10" cy="2" r="1.5" fill="white" opacity=".5" />
-          <circle cx="10" cy="18" r="1.5" fill="white" opacity=".5" />
-          <circle cx="2" cy="10" r="1.5" fill="white" opacity=".5" />
-          <circle cx="18" cy="10" r="1.5" fill="white" opacity=".5" />
-        </svg>
+        <TransmissionIcon size={13} color="white" />
       </div>
 
       <div className="max-w-[82%] px-4 py-2.5 text-[14px] leading-[1.7] font-body bg-[var(--clip)] border border-[var(--rule)] text-[var(--ink)]">
@@ -159,6 +164,14 @@ export default function ChatWidget() {
   // Focus textarea when panel opens
   useEffect(() => {
     if (open) setTimeout(() => textareaRef.current?.focus(), 300)
+  }, [open])
+
+  // Escape key to close
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [open])
 
   const sendMessage = useCallback(async (text: string) => {
@@ -234,20 +247,15 @@ export default function ChatWidget() {
               <line x1="6" y1="6" x2="18" y2="18" />
             </motion.svg>
           ) : (
-            <motion.svg
+            <motion.div
               key="chat"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              width="13" height="13" viewBox="0 0 20 20" fill="none"
             >
-              <circle cx="10" cy="10" r="3" fill="white" />
-              <circle cx="10" cy="2" r="1.5" fill="white" opacity=".5" />
-              <circle cx="10" cy="18" r="1.5" fill="white" opacity=".5" />
-              <circle cx="2" cy="10" r="1.5" fill="white" opacity=".5" />
-              <circle cx="18" cy="10" r="1.5" fill="white" opacity=".5" />
-            </motion.svg>
+              <TransmissionIcon size={13} color="white" />
+            </motion.div>
           )}
         </AnimatePresence>
         <span className="font-mono text-[11px] tracking-[0.1em] uppercase">
@@ -276,16 +284,10 @@ export default function ChatWidget() {
                 className="flex items-center justify-center w-8 h-8 flex-shrink-0"
                 style={{ background: 'var(--ink)' }}
               >
-                <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="10" r="3" fill="white" />
-                  <circle cx="10" cy="2" r="1.5" fill="white" opacity=".5" />
-                  <circle cx="10" cy="18" r="1.5" fill="white" opacity=".5" />
-                  <circle cx="2" cy="10" r="1.5" fill="white" opacity=".5" />
-                  <circle cx="18" cy="10" r="1.5" fill="white" opacity=".5" />
-                </svg>
+                <TransmissionIcon size={15} color="white" />
               </div>
               <div className="flex-1">
-                <p className="text-[13.5px] font-semibold text-[var(--ink)] font-display leading-none">
+                <p className="text-[13.5px] font-semibold text-[var(--ink)] font-body leading-none">
                   AI Pulse Assistant
                 </p>
                 <p className="text-[11px] text-[var(--ink-mute)] mt-0.5">
@@ -322,13 +324,7 @@ export default function ChatWidget() {
                     className="flex items-center justify-center w-14 h-14 mb-1"
                     style={{ background: 'var(--clip)', border: '1px solid var(--rule-strong)' }}
                   >
-                    <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="10" r="3" fill="var(--ink)" />
-                      <circle cx="10" cy="2" r="1.5" fill="var(--ink)" opacity=".5" />
-                      <circle cx="10" cy="18" r="1.5" fill="var(--ink)" opacity=".5" />
-                      <circle cx="2" cy="10" r="1.5" fill="var(--ink)" opacity=".5" />
-                      <circle cx="18" cy="10" r="1.5" fill="var(--ink)" opacity=".5" />
-                    </svg>
+                    <TransmissionIcon size={22} color="var(--ink)" />
                   </div>
                   <p className="text-[13px] font-semibold text-[var(--ink)] font-display">
                     Ask anything about AI news
@@ -365,16 +361,10 @@ export default function ChatWidget() {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <div
-                    className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full"
+                    className="flex-shrink-0 flex items-center justify-center w-7 h-7"
                     style={{ background: 'var(--ink)' }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                      <circle cx="10" cy="10" r="3" fill="white" />
-                      <circle cx="10" cy="2" r="1.5" fill="white" opacity=".5" />
-                      <circle cx="10" cy="18" r="1.5" fill="white" opacity=".5" />
-                      <circle cx="2" cy="10" r="1.5" fill="white" opacity=".5" />
-                      <circle cx="18" cy="10" r="1.5" fill="white" opacity=".5" />
-                    </svg>
+                    <TransmissionIcon size={13} color="white" />
                   </div>
                   <div className="bg-[var(--clip)] border border-[var(--rule)]">
                     <TypingDots />
