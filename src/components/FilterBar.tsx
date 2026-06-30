@@ -45,14 +45,19 @@ export default function FilterBar({ active, onChange, counts }: Props) {
   }, [counts])
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-7 rule-bottom pb-3" role="group" aria-label="Filter by section">
+    <div
+      className="flex items-center gap-x-6 mb-7 rule-bottom pb-3 overflow-x-auto"
+      style={{ scrollbarWidth: 'none' }}
+      role="group"
+      aria-label="Filter by section"
+    >
       {FILTERS.map((f, i) => (
         <button
           key={f.value}
           ref={el => { btnRefs.current[i] = el }}
           onClick={() => onChange(f.value)}
           className={cn(
-            'font-mono text-[12px] uppercase tracking-[0.1em] pb-1 -mb-[13px] border-b-2 transition-colors cursor-pointer',
+            'font-mono text-[12px] uppercase tracking-[0.1em] pb-1 -mb-[13px] flex-shrink-0 border-b-2 transition-colors cursor-pointer',
             active === f.value
               ? 'text-[var(--ink)] border-[var(--spot)]'
               : 'text-[var(--ink-soft)] border-transparent hover:text-[var(--ink)]',

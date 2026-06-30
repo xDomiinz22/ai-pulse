@@ -7,6 +7,7 @@ import {
   logout as apiLogout,
   type User,
 } from '../lib/api'
+import AuthModal from '../components/AuthModal'
 
 interface AuthContextValue {
   user: User | null
@@ -15,13 +16,15 @@ interface AuthContextValue {
   register: (username: string, email: string, password: string) => Promise<void>
   googleLogin: (credential: string) => Promise<void>
   logout: () => Promise<void>
+  openAuthModal: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser]       = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser]         = useState<User | null>(null)
+  const [loading, setLoading]   = useState(true)
+  const [authOpen, setAuthOpen] = useState(false)
 
   // Restore the session from the httpOnly cookie on first load.
   useEffect(() => {
@@ -44,10 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await apiLogout()
     setUser(null)
   }
+  const openAuthModal = () => setAuthOpen(true)
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout, openAuthModal }}>
       {children}
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </AuthContext.Provider>
   )
 }

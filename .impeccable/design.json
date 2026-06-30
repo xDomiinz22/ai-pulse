@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-29T00:00:00.000Z",
+  "title": "Design System: AI Pulse",
+  "extensions": {
+    "colorMeta": {
+      "spot":       { "role": "primary",  "displayName": "Printing Red",    "canonical": "#a23b2b", "tonalRamp": ["#3b0e07","#5c1810","#7e2419","#a23b2b","#be6356","#d08c82","#e3b9b3","#f4e4e2"] },
+      "ink":        { "role": "neutral",  "displayName": "Press Ink",       "canonical": "#211b16", "tonalRamp": ["#0d0b09","#211b16","#3a3229","#54493f","#6b6155","#948a79","#c4bfb6","#e9e1d0"] },
+      "ink-soft":   { "role": "neutral",  "displayName": "Faded Ink",       "canonical": "#6b6155", "tonalRamp": ["#211b16","#3a3229","#54493f","#6b6155","#857970","#a89f96","#cbc7c2","#f0edea"] },
+      "ink-mute":   { "role": "neutral",  "displayName": "Ghost Ink",       "canonical": "#948a79", "tonalRamp": ["#3a3229","#54493f","#6b6155","#7d7466","#948a79","#b0a898","#cec9c1","#eeeae5"] },
+      "paper":      { "role": "neutral",  "displayName": "Newsprint",       "canonical": "#e9e1d0", "tonalRamp": ["#6b6155","#8a8075","#ada69c","#c9c4ba","#dbd6cc","#e9e1d0","#f3eddf","#faf8f4"] },
+      "clip":       { "role": "neutral",  "displayName": "Clipping",        "canonical": "#f3eddf", "tonalRamp": ["#948a79","#b0a898","#cec9c1","#dbd6cc","#e9e1d0","#ede8dc","#f3eddf","#faf8f4"] },
+      "clip-hover": { "role": "neutral",  "displayName": "Clipping Hover",  "canonical": "#efe7d4", "tonalRamp": ["#8a8075","#ada69c","#c9c4ba","#dbd6cc","#e4ddd0","#efe7d4","#f5f0e5","#faf8f4"] },
+      "rule":       { "role": "neutral",  "displayName": "Column Rule",     "canonical": "#ccc1ab", "tonalRamp": ["#6b6155","#857970","#a89f96","#bdb5a6","#ccc1ab","#dbd4c7","#ede9e1","#f8f6f2"] },
+      "rule-strong":{ "role": "neutral",  "displayName": "Heavy Rule",      "canonical": "#b6a98f", "tonalRamp": ["#54493f","#6b6155","#948a79","#a89f96","#b6a98f","#cdc6b9","#e2ddd5","#f4f2ef"] }
+    },
+    "typographyMeta": {
+      "display":  { "displayName": "Display",  "purpose": "Hero headline only. One per page. Never used for section titles or card headlines." },
+      "headline": { "displayName": "Headline", "purpose": "Article card titles. Clickable; hover to spot." },
+      "body":     { "displayName": "Body",     "purpose": "Article summaries, hero lede, modal prose. Max line length 65–75ch." },
+      "label":    { "displayName": "Wire Label","purpose": "All metadata: datelines, sources, categories, counts. The machine voice. Never for body copy." }
+    },
+    "shadows": [
+      { "name": "tooltip",    "value": "0 6px 20px rgba(33, 27, 22, 0.25)", "purpose": "Tippy tooltip. Warm, diffuse ambient shadow." },
+      { "name": "chat-fab",   "value": "0 8px 24px rgba(33, 27, 22, 0.40)", "purpose": "Chat widget FAB. Stronger warm glow so the button reads above page." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(162, 59, 43, 0.12)", "purpose": "Input focus. Spot-red glow at low opacity. Only use on focusable form elements." }
+    ],
+    "motion": [
+      { "name": "hero-reveal",   "value": "opacity 0→1, y 18px→0, duration 0.6s, stagger 0.12s, ease power2.out", "purpose": "Hero section: eyebrow, headline, and lede settle into place on page load." },
+      { "name": "card-reveal",   "value": "opacity 0→1, y 24px→0, duration 0.5s, stagger 0.08s, ease power2.out", "purpose": "News cards: ScrollTrigger.batch() reveal as cards enter viewport (top 88%). Default visible; transition enhances." },
+      { "name": "ticker-out",    "value": "opacity 1→0, y 0→-8px, duration 0.35s, ease power1.in",               "purpose": "Ticker headline exit." },
+      { "name": "ticker-in",     "value": "opacity 0→1, y 8px→0, duration 0.4s, ease power2.out",                "purpose": "Ticker headline entrance." },
+      { "name": "live-dot",      "value": "scale 1→0.8, opacity 1→0.4, 1.8s ease-in-out infinite",               "purpose": "Live indicator pulse. Signals real-time data." },
+      { "name": "state-change",  "value": "transition: all 0.2s ease",                                            "purpose": "Default state transitions: color, opacity, border on hover/focus." }
+    ],
+    "breakpoints": [
+      { "name": "sm",  "value": "640px"  },
+      { "name": "md",  "value": "768px"  },
+      { "name": "lg",  "value": "1024px" },
+      { "name": "max", "value": "1160px", "note": "Main content container max-width." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Used for primary actions: sign in, create account, submit. Ink background with paper text in uppercase mono.",
+      "html": "<button class=\"ds-btn-primary\">SIGN IN</button>",
+      "css": ".ds-btn-primary { background: #211b16; color: #e9e1d0; padding: 10px 16px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; border: none; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; } .ds-btn-primary:hover { opacity: 0.9; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Inline / secondary actions: Log out, Sign in link, Read →. Wire label style with hover to spot.",
+      "html": "<button class=\"ds-btn-ghost\">LOG OUT</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #6b6155; padding: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; border: none; cursor: pointer; transition: color 0.2s; } .ds-btn-ghost:hover { color: #a23b2b; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Auth modal and search form inputs. Paper background, minimal radius, spot-red focus ring.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"EMAIL\" />",
+      "css": ".ds-input { width: 100%; background: #e9e1d0; border: 1px solid #b6a98f; border-radius: 2px; padding: 10px 12px; font-family: 'Newsreader', Georgia, serif; font-size: 15px; color: #211b16; outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; } .ds-input::placeholder { color: #948a79; } .ds-input:focus { border-color: #a23b2b; box-shadow: 0 0 0 3px rgba(162, 59, 43, 0.12); }"
+    },
+    {
+      "name": "News Card (Clipping)",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Article cards styled as newspaper clippings. Flat (no shadow), cut edges (no radius), tonal separation from page via clip background.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-kicker\"><span class=\"ds-kicker-dot\"></span> AI MODELS <span class=\"ds-card-date\">JUN 29</span></div><h2 class=\"ds-card-headline\">Anthropic releases new model with extended context window</h2><p class=\"ds-card-body\">The latest release pushes context limits further while improving reasoning on complex multi-step tasks.</p><div class=\"ds-card-byline\">VIA TECHCRUNCH · 3 MIN READ</div></article>",
+      "css": ".ds-card { background: #f3eddf; border: 1px solid #ccc1ab; padding: 24px; display: flex; flex-direction: column; gap: 12px; transition: background 0.2s, border-color 0.2s; } .ds-card:hover { background: #efe7d4; border-color: #b6a98f; } .ds-card-kicker { display: flex; align-items: center; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #211b16; } .ds-kicker-dot { display: inline-block; width: 7px; height: 7px; background: #a23b2b; margin-right: 8px; } .ds-card-date { color: #6b6155; } .ds-card-headline { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 20px; line-height: 1.2; color: #211b16; margin: 0; } .ds-card-headline:hover { color: #a23b2b; cursor: pointer; } .ds-card-body { font-family: 'Newsreader', Georgia, serif; font-size: 15px; line-height: 1.6; color: #6b6155; margin: 0; } .ds-card-byline { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6155; }"
+    },
+    {
+      "name": "Ticker Badge",
+      "kind": "custom",
+      "refersTo": "ticker-badge",
+      "description": "The ink-background 'LATEST' tab on the wire rotator. Signals real-time data feed.",
+      "html": "<span class=\"ds-ticker-badge\"><span class=\"ds-ticker-dot\"></span> LATEST</span>",
+      "css": ".ds-ticker-badge { display: inline-flex; align-items: center; gap: 8px; background: #211b16; color: #e9e1d0; padding: 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; height: 36px; flex-shrink: 0; } .ds-ticker-dot { width: 6px; height: 6px; border-radius: 50%; background: #a23b2b; animation: ds-pulse 1.8s ease-in-out infinite; } @keyframes ds-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } } @media (prefers-reduced-motion: reduce) { .ds-ticker-dot { animation: none; } }"
+    },
+    {
+      "name": "Filter Tab",
+      "kind": "chip",
+      "refersTo": "filter-tab",
+      "description": "Section filter tabs styled as column tabs — text only, underline as active indicator.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab ds-tab-active\">All</button><button class=\"ds-tab\">AI Models</button><button class=\"ds-tab\">Research</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 0; border-bottom: 1px solid #ccc1ab; } .ds-tab { background: transparent; border: none; border-bottom: 2px solid transparent; padding: 10px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6155; cursor: pointer; transition: color 0.2s, border-color 0.2s; margin-bottom: -1px; } .ds-tab:hover { color: #211b16; } .ds-tab.ds-tab-active { border-bottom-color: #a23b2b; color: #211b16; }"
+    },
+    {
+      "name": "Wire Label",
+      "kind": "custom",
+      "refersTo": "wire-label",
+      "description": "The system's metadata voice. Applied to datelines, sources, categories, counts, and all supporting information. Never for body copy.",
+      "html": "<span class=\"ds-wire\">VIA THE VERGE · JUN 29 · 4 MIN READ</span>",
+      "css": ".ds-wire { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6155; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Wire Room",
+    "overview": "AI Pulse is designed as a teletype room from the 1950s — machines printing AI news without pause, fresh ink, quiet urgency. The interface does not decorate; it transmits. Every visual decision refers back to the physical act of journalism: newsprint grain on the body, hairline rules separating columns, a masthead with the authority of a broadsheet. The typographic hierarchy is the hierarchy — not color, not cards, not icons.\n\nThe system rejects the current AI-editorial cliché: warm-beige newsletters with rounded cards, gradient headings, and a SaaS softness that mistakes approachability for credibility. It also refuses the opposite trap — bare-bones, unstyled HackerNews austerity. The wire room is disciplined, not bare; crafted, not decorated.\n\nThis is a portfolio piece. The craft is the argument. Invisible polish — contrast, rhythm, motion — is wasted; make the detail legible.",
+    "keyCharacteristics": [
+      "Typographic hierarchy does all the structural work; color is reserved for punctuation",
+      "Three voices: display serif (Fraunces) for authority, body serif (Newsreader) for depth, monospace (IBM Plex Mono) for the machine layer",
+      "One spot color (printing red #a23b2b) used as a live indicator, a focus state, and nothing else",
+      "Motion is editorial: headlines settle into place, cards arrive as the reader scrolls, never as a choreographed show",
+      "The newsprint grain texture prevents the paper palette from reading as AI-generated cream"
+    ],
+    "rules": [
+      { "name": "The One Spot Rule",        "body": "The printing red (#a23b2b) appears on ≤5% of any given screen. It marks liveness, focus, and action. If it appears on more than one or two elements per viewport, it has ceased to be a spot and become wallpaper.",                                                                   "section": "colors" },
+      { "name": "The Warm-Neutral Warning", "body": "The paper palette sits in the OKLCH range that reads as AI-generated cream in 2026. The grain texture and strict typographic hierarchy prevent this reading. Do not soften the grain, reduce ink contrast, or add rounded corners and pastel accents.",                 "section": "colors" },
+      { "name": "The Three-Voice Rule",     "body": "Fraunces for authority, Newsreader for depth, IBM Plex Mono for the machine layer. Do not introduce a fourth family. Each font has one register and it must not bleed into another.",                                                                                    "section": "typography" },
+      { "name": "The Masthead Exception",   "body": "The nameplate (clamp(44px, 9vw, 92px)) is the only element permitted above the display ceiling. It is not a heading; it is a logotype in type.",                                                                                                                      "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. A card is distinguished from the background by its tonal step (clip vs. paper), not by elevation. Adding a shadow to a card converts an editorial clipping into a SaaS product card, which is prohibited.",                              "section": "elevation" }
+    ],
+    "dos": [
+      "Do use text-wrap: balance on all h1–h3 headings.",
+      "Do keep the printing red (#a23b2b) to live indicators, focus rings, hover states, and the hero italic flourish only.",
+      "Do use the warm shadow formula (rgba(33, 27, 22, ...)) for all shadows.",
+      "Do keep card radius at 0. Clippings have cut edges.",
+      "Do use IBM Plex Mono for every metadata element.",
+      "Do preserve the newsprint grain texture.",
+      "Do include prefers-reduced-motion alternatives for every GSAP animation.",
+      "Do verify contrast before choosing a muted color."
+    ],
+    "donts": [
+      "Don't use background-clip: text with a gradient. Gradient text is banned.",
+      "Don't add rounded corners to cards. Anything above 2px on a card is a SaaS move.",
+      "Don't use side-stripe borders (border-left > 1px as a colored accent).",
+      "Don't add box shadows to cards at rest.",
+      "Don't let the spot color appear on backgrounds, section headings, or more than one or two elements per viewport.",
+      "Don't introduce a fourth typeface.",
+      "Don't design anything that looks like TechCrunch, The Verge, or Morning Brew.",
+      "Don't use numbered section markers (01/02/03) as scaffolding.",
+      "Don't soften color contrast for elegance — darken muted text until it passes 4.5:1.",
+      "Don't use glassmorphism or backdrop-filter as decoration."
+    ]
+  }
+}

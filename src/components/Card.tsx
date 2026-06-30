@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { formatDistanceToNow, parseISO, format } from 'date-fns'
 import type { Article } from '../types'
 import { voteArticle, type VoteType } from '../lib/api'
@@ -14,19 +14,22 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 interface Props {
   article: Article
+  featured?: boolean
 }
 
-export default function Card({ article }: Props) {
-  const { user } = useAuth()
+export default function Card({ article, featured = false }: Props) {
+  const { user, openAuthModal } = useAuth()
 
   const [votesUp, setVotesUp]     = useState(article.votes_up)
   const [votesDown, setVotesDown] = useState(article.votes_down)
   const [voted, setVoted]         = useState(false)
   const [voting, setVoting]       = useState(false)
+  const [voteError, setVoteError] = useState(false)
 
   const handleVote = async (type: VoteType) => {
     if (!user || voted || voting) return
     setVoting(true)
+    setVoteError(false)
     const result = await voteArticle(article.id, type)
     if (result.ok) {
       if (result.votes_up !== undefined)   setVotesUp(result.votes_up)
@@ -34,6 +37,9 @@ export default function Card({ article }: Props) {
       setVoted(true)
     } else if (result.alreadyVoted) {
       setVoted(true)
+    } else {
+      setVoteError(true)
+      setTimeout(() => setVoteError(false), 3000)
     }
     setVoting(false)
   }
@@ -55,15 +61,22 @@ export default function Card({ article }: Props) {
       </div>
 
       {/* Headline */}
-      <h2 className="font-display font-semibold leading-[1.2] text-[var(--ink)] text-[20px]">
-        <a href={article.url} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--spot)] transition-colors">
+      <h2 className={cn(
+        'font-display font-semibold text-[var(--ink)]',
+        featured ? 'text-[26px] leading-[1.15]' : 'text-[20px] leading-[1.2]',
+      )} style={featured ? { textWrap: 'balance' } as CSSProperties : undefined}>
+        <a href={article.url} target="_blank" rel="noopener noreferrer"
+          className="underline decoration-[var(--rule)] underline-offset-2 hover:text-[var(--spot)] hover:decoration-[var(--spot)] transition-colors">
           {article.title}
         </a>
       </h2>
 
       {/* Standfirst */}
       {article.short_summary && (
-        <p className="font-body text-[15px] leading-[1.6] text-[var(--ink-soft)] flex-1">
+        <p className={cn(
+          'font-body leading-[1.6] text-[var(--ink-soft)] flex-1',
+          featured ? 'text-[17px]' : 'text-[15px]',
+        )}>
           {article.short_summary}
         </p>
       )}
@@ -77,39 +90,51 @@ export default function Card({ article }: Props) {
 
       {/* Vote row */}
       <div className="flex items-center gap-2 pt-3 mt-auto border-t border-[var(--rule)]">
-        <button
-          onClick={() => handleVote('up')}
-          disabled={!user || voted || voting}
-          aria-label={user ? 'Upvote' : 'Sign in to vote'}
-          title={!user ? 'Sign in to vote' : undefined}
-          className={cn(
-            'inline-flex items-center gap-1 font-mono text-[12px] text-[var(--ink)] transition-colors',
-            !user ? 'opacity-40 cursor-not-allowed' : voted ? 'opacity-60 cursor-default' : 'hover:text-[var(--spot)] cursor-pointer',
-          )}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
-          </svg>
-          {votesUp}
-        </button>
-        <button
-          onClick={() => handleVote('down')}
-          disabled={!user || voted || voting}
-          aria-label={user ? 'Downvote' : 'Sign in to vote'}
-          title={!user ? 'Sign in to vote' : undefined}
-          className={cn(
-            'inline-flex items-center gap-1 font-mono text-[12px] text-[var(--ink)] transition-colors',
-            !user ? 'opacity-40 cursor-not-allowed' : voted ? 'opacity-60 cursor-default' : 'hover:text-[var(--spot)] cursor-pointer',
-          )}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 14V2" /><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
-          </svg>
-          {votesDown}
-        </button>
-        {voted && <span className="wire ml-1">Thanks for voting</span>}
+        {!user ? (
+          <button
+            onClick={openAuthModal}
+            className="wire text-[var(--ink-soft)] hover:text-[var(--spot)] border-b border-[var(--rule)] hover:border-[var(--spot)] transition-colors pb-0.5 cursor-pointer"
+          >
+            Sign in to vote
+          </button>
+        ) : voted ? (
+          <span className="wire text-[var(--ink-soft)]">Thanks for voting</span>
+        ) : voteError ? (
+          <span className="wire text-[var(--spot)]">Couldn't record vote — try again</span>
+        ) : (
+          <>
+            <button
+              onClick={() => handleVote('up')}
+              disabled={voting}
+              aria-label="Upvote"
+              className={cn(
+                'inline-flex items-center gap-1 font-mono text-[12px] text-[var(--ink)] transition-colors',
+                voting ? 'opacity-40 cursor-wait' : 'hover:text-[var(--spot)] cursor-pointer',
+              )}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+              </svg>
+              {votesUp}
+            </button>
+            <button
+              onClick={() => handleVote('down')}
+              disabled={voting}
+              aria-label="Downvote"
+              className={cn(
+                'inline-flex items-center gap-1 font-mono text-[12px] text-[var(--ink)] transition-colors',
+                voting ? 'opacity-40 cursor-wait' : 'hover:text-[var(--spot)] cursor-pointer',
+              )}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 14V2" /><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+              </svg>
+              {votesDown}
+            </button>
+          </>
+        )}
         <a href={article.url} target="_blank" rel="noopener noreferrer"
-          className="wire ml-auto hover:text-[var(--spot)] transition-colors">
+          className="wire ml-auto text-[var(--spot)] hover:text-[var(--ink)] transition-colors">
           Read →
         </a>
       </div>

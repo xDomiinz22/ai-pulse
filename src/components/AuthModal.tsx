@@ -112,9 +112,9 @@ export default function AuthModal({ open, onClose }: Props) {
         <GoogleSignInButton onCredential={handleGoogle} onError={setError} />
 
         <div className="my-5 flex items-center gap-3">
-          <span className="h-px flex-1 bg-[var(--border)]" />
-          <span className="text-[11px] uppercase tracking-wider text-[var(--text-3)]">or</span>
-          <span className="h-px flex-1 bg-[var(--border)]" />
+          <span className="h-px flex-1 bg-[var(--rule)]" />
+          <span className="text-[11px] uppercase tracking-wider text-[var(--ink-mute)]">or</span>
+          <span className="h-px flex-1 bg-[var(--rule)]" />
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
@@ -160,7 +160,7 @@ export default function AuthModal({ open, onClose }: Props) {
                     style={{
                       background: i < strength.score
                         ? STRENGTH_COLORS[strength.score]
-                        : 'var(--border)',
+                        : 'var(--rule)',
                     }}
                   />
                 ))}

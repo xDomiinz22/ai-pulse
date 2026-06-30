@@ -42,13 +42,14 @@
 
 /* ── Base ────────────────────────────────────────────────────────────────── */
 @layer base {
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
   body {
     font-family: var(--font-body);
     color: var(--ink);
     background-color: var(--paper);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
   a { text-decoration: none; color: inherit; }
   /* Editorial defaults: headings in the display serif. */

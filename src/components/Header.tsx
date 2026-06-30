@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { format } from 'date-fns'
 import tippy from 'tippy.js'
 import { useAuth } from '../context/AuthContext'
-import AuthModal from './AuthModal'
 
 interface Props {
   query: string
@@ -11,10 +10,8 @@ interface Props {
 
 export default function Header({ query, onQueryChange }: Props) {
   const liveRef = useRef<HTMLSpanElement>(null)
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { user, loading, logout } = useAuth()
-  const [authOpen, setAuthOpen] = useState(false)
+  const { user, loading, logout, openAuthModal } = useAuth()
 
   const dateline = format(new Date(), 'EEEE, MMMM d, yyyy')
 
@@ -28,10 +25,6 @@ export default function Header({ query, onQueryChange }: Props) {
     return () => instance.destroy()
   }, [])
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current)
-    debounceTimer.current = setTimeout(() => onQueryChange(e.target.value), 200)
-  }
 
   return (
     <header className="relative z-10 bg-[var(--paper)]">
@@ -50,8 +43,8 @@ export default function Header({ query, onQueryChange }: Props) {
               </svg>
               <input
                 type="search"
-                defaultValue={query}
-                onChange={handleInput}
+                value={query}
+                onChange={e => onQueryChange(e.target.value)}
                 placeholder="SEARCH"
                 autoComplete="off"
                 className="bg-transparent border-b border-[var(--rule-strong)] pl-5 pr-1 py-1 w-28 focus:w-40 outline-none transition-all duration-300 font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ink)] placeholder:text-[var(--ink-mute)] focus:border-[var(--spot)]"
@@ -79,7 +72,7 @@ export default function Header({ query, onQueryChange }: Props) {
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setAuthOpen(true)} className="wire hover:text-[var(--spot)] transition-colors cursor-pointer">
+                <button onClick={openAuthModal} className="wire hover:text-[var(--spot)] transition-colors cursor-pointer">
                   Sign in
                 </button>
               )
@@ -102,7 +95,6 @@ export default function Header({ query, onQueryChange }: Props) {
         </div>
       </div>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </header>
   )
 }
