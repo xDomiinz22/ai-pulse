@@ -17,7 +17,7 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 - 🔐 **Authentication** — email/password **and** Google Sign-In, with sessions delivered as httpOnly cookies (JWT never exposed to JS) + CSRF double-submit protection and a password-strength meter.
 - 👍 **Voting & Trending** — upvote/downvote (**logged-in users only**) with per-IP anti-spam; a live trending ranking backed by a Redis sorted set that updates instantly on vote.
 - 🔎 **Search & filters** — fuzzy client-side search (Fuse.js) and per-category filtering with real article counts.
-- 🎨 **Polished UI** — Tailwind CSS v4, GSAP animations, dark/light theme.
+- 🎨 **Editorial design system** — "The Wire Room" aesthetic: Fraunces (display) + Newsreader (body) + IBM Plex Mono (wire labels), a single printing-red spot color (`#a23b2b`), 0px card radius, flat-by-default surfaces. Designed and iterated end-to-end with the [**impeccable**](https://github.com/anthropics/claude-code) Claude Code skill (critique → layout → adapt → polish → UX fixes). GSAP scroll reveals and GSAP-powered ticker.
 - 🛡️ **Hardened backend** — Helmet security headers, sliding-window rate limiting (Upstash), input caps, and graceful degradation when Redis is unavailable.
 
 ---
@@ -27,6 +27,7 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 | Layer        | Technologies                                                                 |
 | ------------ | ---------------------------------------------------------------------------- |
 | **Frontend** | React 18, Vite, TypeScript, Tailwind CSS v4, GSAP, Fuse.js, date-fns         |
+| **Design**   | [impeccable](https://github.com/anthropics/claude-code) (Claude Code skill) — critique, layout, adapt, polish, UX audit; PRODUCT.md + DESIGN.md design system |
 | **Backend**  | Node.js, Express 5, TypeScript, Prisma 7                                      |
 | **Data**     | Neon (PostgreSQL + **pgvector**), Upstash Redis (cache, rate limiting, trending, JWT denylist) |
 | **AI**       | Google Gemini — 2.5 Flash (scraper), 3.5 Flash (chat agent), `gemini-embedding-001` (embeddings) |
