@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, type CSSProperties } from 'react'
 import gsap from 'gsap'
 
 export default function Hero() {
@@ -28,7 +28,7 @@ export default function Hero() {
         <div className="lead-el wire mb-5">The AI Pulse Brief</div>
 
         <h1 className="lead-el font-display font-black text-[var(--ink)] leading-[0.98] tracking-[-0.02em] mb-6"
-          style={{ fontSize: 'clamp(34px, 5.5vw, 60px)' }}>
+          style={{ fontSize: 'clamp(34px, 5.5vw, 60px)', textWrap: 'balance' } as CSSProperties}>
           All the AI that&rsquo;s <span className="gradient-text">fit to print.</span>
         </h1>
 

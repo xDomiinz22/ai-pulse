@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { format } from 'date-fns'
 import tippy from 'tippy.js'
 import { useAuth } from '../context/AuthContext'
-import AuthModal from './AuthModal'
 
 interface Props {
   query: string
@@ -13,8 +12,7 @@ export default function Header({ query, onQueryChange }: Props) {
   const liveRef = useRef<HTMLSpanElement>(null)
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { user, loading, logout } = useAuth()
-  const [authOpen, setAuthOpen] = useState(false)
+  const { user, loading, logout, openAuthModal } = useAuth()
 
   const dateline = format(new Date(), 'EEEE, MMMM d, yyyy')
 
@@ -79,7 +77,7 @@ export default function Header({ query, onQueryChange }: Props) {
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setAuthOpen(true)} className="wire hover:text-[var(--spot)] transition-colors cursor-pointer">
+                <button onClick={openAuthModal} className="wire hover:text-[var(--spot)] transition-colors cursor-pointer">
                   Sign in
                 </button>
               )
@@ -102,7 +100,6 @@ export default function Header({ query, onQueryChange }: Props) {
         </div>
       </div>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </header>
   )
 }
