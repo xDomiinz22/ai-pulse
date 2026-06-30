@@ -56,7 +56,7 @@ export default function NewsGrid({ articles, loading }: Props) {
       ref={gridRef}
       className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
     >
-      <div className="sm:col-span-2 lg:col-span-2">
+      <div className="lg:col-span-2">
         <Card article={lead} featured />
       </div>
       {rest.map((article) => (

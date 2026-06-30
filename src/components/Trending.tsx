@@ -4,6 +4,7 @@ import { API, ARTICLE_VOTED_EVENT } from '../lib/api'
 
 export default function Trending() {
   const [items, setItems] = useState<Article[]>([])
+  const [loaded, setLoaded] = useState(false)
 
   const load = useCallback(() => {
     fetch(`${API}/api/articles/trending?limit=5`)
@@ -21,7 +22,27 @@ export default function Trending() {
     return () => window.removeEventListener(ARTICLE_VOTED_EVENT, load)
   }, [load])
 
-  if (items.length === 0) return null
+  useEffect(() => {
+    const t = setTimeout(() => setLoaded(true), 600)
+    return () => clearTimeout(t)
+  }, [])
+
+  if (items.length === 0) {
+    if (!loaded) return null
+    return (
+      <section className="mb-12">
+        <div className="flex items-center gap-3 mb-4 rule-bottom pb-2">
+          <h2 className="font-display text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--ink)]">
+            Trending
+          </h2>
+          <span className="wire">Most read this week</span>
+        </div>
+        <p className="wire text-[var(--ink-mute)] py-3">
+          No votes yet — be the first to weigh in on today's dispatches.
+        </p>
+      </section>
+    )
+  }
 
   return (
     <section className="mb-12">
