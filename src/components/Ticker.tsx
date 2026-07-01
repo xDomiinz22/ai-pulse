@@ -4,9 +4,10 @@ import { API } from '../lib/api'
 
 interface Head { title: string; url: string }
 
-// A single-headline "wire" rotator that sits under the masthead. Cycles the
-// latest headlines one at a time with a discreet GSAP slide+fade, pausing
-// nothing else on the page. Honours prefers-reduced-motion.
+// A single-headline "wire" rotator that sits under the masthead — the
+// interface's terminal accent zone (DESIGN.md §5). Cycles the latest
+// headlines one at a time with a typewriter reveal behind a blinking
+// spot-colored cursor. Honours prefers-reduced-motion.
 export default function Ticker() {
   const [heads, setHeads] = useState<Head[]>([])
   const lineRef = useRef<HTMLAnchorElement>(null)
@@ -29,17 +30,30 @@ export default function Ticker() {
 
     const advance = () => {
       const next = (idx.current + 1) % heads.length
+      const title = heads[next].title
       const swap = () => {
         idx.current = next
-        el.textContent = heads[next].title
+        el.textContent = title
         el.setAttribute('href', heads[next].url)
       }
       if (reduce) { swap(); return }
+
       gsap.to(el, {
-        opacity: 0, y: -8, duration: 0.35, ease: 'power1.in',
+        opacity: 0, duration: 0.15, ease: 'power1.in',
         onComplete: () => {
-          swap()
-          gsap.fromTo(el, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' })
+          idx.current = next
+          el.setAttribute('href', heads[next].url)
+          el.textContent = ''
+          gsap.set(el, { opacity: 1 })
+          // Typewriter reveal: character count driven by a dummy tween, capped
+          // so long headlines don't take forever to type out.
+          const state = { n: 0 }
+          gsap.to(state, {
+            n: title.length,
+            duration: Math.min(title.length * 0.02, 0.9),
+            ease: 'none',
+            onUpdate: () => { el.textContent = title.slice(0, Math.round(state.n)) },
+          })
         },
       })
     }
@@ -51,19 +65,20 @@ export default function Ticker() {
   if (heads.length === 0) return null
 
   return (
-    <div className="rule-bottom bg-[var(--clip)]">
+    <div className="rule-bottom terminal-zone relative">
       <div className="max-w-[1160px] mx-auto px-6 flex items-stretch h-9 overflow-hidden">
-        <span className="flex items-center gap-2 flex-none bg-[var(--ink)] text-[var(--paper)] px-3 font-mono text-[11px] uppercase tracking-[0.1em]">
-          <span className="w-[6px] h-[6px] rounded-full bg-[var(--spot)]" />
+        <span className="flex items-center gap-2 flex-none text-[var(--paper)] px-3 font-mono text-[11px] uppercase tracking-[0.1em]">
+          <span className="w-[6px] h-[6px] bg-[var(--spot)]" />
           Latest
         </span>
         <span className="flex items-center min-w-0 flex-1 overflow-hidden">
+          <span className="term-cursor text-[var(--spot)] font-mono text-[13px] leading-none pl-4 pr-1 select-none" aria-hidden="true">▍</span>
           <a
             ref={lineRef}
             href={heads[0].url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block truncate font-mono text-[12.5px] text-[var(--ink)] hover:text-[var(--spot)] transition-colors px-4"
+            className="block truncate font-mono text-[12.5px] text-[var(--paper)] hover:text-[var(--spot)] transition-colors pr-4"
           >
             {heads[0].title}
           </a>
