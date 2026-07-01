@@ -62,8 +62,6 @@ export default function Ticker() {
     return () => clearInterval(id)
   }, [heads])
 
-  if (heads.length === 0) return null
-
   return (
     <div className="rule-bottom terminal-zone relative">
       <div className="max-w-[1160px] mx-auto px-6 flex items-stretch h-9 overflow-hidden">
@@ -73,15 +71,21 @@ export default function Ticker() {
         </span>
         <span className="flex items-center min-w-0 flex-1 overflow-hidden">
           <span className="term-cursor text-[var(--spot)] font-mono text-[13px] leading-none pl-4 pr-1 select-none" aria-hidden="true">▍</span>
-          <a
-            ref={lineRef}
-            href={heads[0].url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block truncate font-mono text-[12.5px] text-[var(--paper)] hover:text-[var(--spot)] transition-colors pr-4"
-          >
-            {heads[0].title}
-          </a>
+          {heads.length === 0 ? (
+            <span className="block truncate font-mono text-[12.5px] text-[var(--paper)] opacity-60 pr-4">
+              Connecting to the wire…
+            </span>
+          ) : (
+            <a
+              ref={lineRef}
+              href={heads[0].url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block truncate font-mono text-[12.5px] text-[var(--paper)] hover:text-[var(--spot)] transition-colors pr-4"
+            >
+              {heads[0].title}
+            </a>
+          )}
         </span>
       </div>
     </div>
