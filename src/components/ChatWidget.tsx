@@ -23,18 +23,13 @@ let msgId = 0
 const nextId = () => ++msgId
 
 // ── Typing indicator ───────────────────────────────────────────────────────
+// Terminal accent zone liveness marker (DESIGN.md §5): a single blinking
+// spot-colored block cursor, not a generic spinner.
 
 function TypingDots() {
   return (
-    <div className="flex items-center gap-[5px] px-4 py-3">
-      {[0, 1, 2].map(i => (
-        <motion.span
-          key={i}
-          className="w-[7px] h-[7px] bg-[var(--ink-mute)]"
-          animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
-        />
-      ))}
+    <div className="flex items-center px-4 py-3">
+      <span className="term-cursor text-[var(--spot)] font-mono text-[15px] leading-none select-none" aria-hidden="true">▍</span>
     </div>
   )
 }
@@ -225,8 +220,7 @@ export default function ChatWidget() {
       {/* ── Floating action button ── */}
       <motion.button
         onClick={() => setOpen(o => !o)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 h-10 text-[var(--paper)] shadow-[0_4px_16px_rgba(33,27,22,0.35)] cursor-pointer"
-        style={{ background: 'var(--ink)' }}
+        className="terminal-zone fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 h-10 text-[var(--paper)] shadow-[0_4px_16px_rgba(33,27,22,0.35)] cursor-pointer"
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.96 }}
         aria-label="Open AI chat"
@@ -275,22 +269,19 @@ export default function ChatWidget() {
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
           >
-            {/* Header */}
+            {/* Header — terminal accent zone */}
             <div
-              className="flex items-center gap-3 px-4 py-3.5 flex-shrink-0"
-              style={{ borderBottom: '1px solid var(--rule)' }}
+              className="terminal-zone relative flex items-center gap-3 px-4 py-3.5 flex-shrink-0"
+              style={{ borderBottom: '1px solid rgba(233, 225, 208, 0.15)' }}
             >
-              <div
-                className="flex items-center justify-center w-8 h-8 flex-shrink-0"
-                style={{ background: 'var(--ink)' }}
-              >
+              <div className="flex items-center justify-center w-8 h-8 flex-shrink-0">
                 <TransmissionIcon size={15} color="white" />
               </div>
               <div className="flex-1">
-                <p className="text-[13.5px] font-semibold text-[var(--ink)] font-body leading-none">
+                <p className="text-[13.5px] font-semibold text-[var(--paper)] font-body leading-none">
                   AI Pulse Assistant
                 </p>
-                <p className="text-[11px] text-[var(--ink-mute)] mt-0.5">
+                <p className="text-[11px] text-[var(--paper)] opacity-60 mt-0.5">
                   Ask about today's AI coverage
                 </p>
               </div>
@@ -298,7 +289,7 @@ export default function ChatWidget() {
                 <button
                   onClick={() => setMessages([])}
                   title="Clear chat"
-                  className="text-[var(--ink-mute)] hover:text-[var(--ink-soft)] transition-colors cursor-pointer"
+                  className="text-[var(--paper)] opacity-60 hover:opacity-100 hover:text-[var(--spot)] transition-all cursor-pointer"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6" />

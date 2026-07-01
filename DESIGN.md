@@ -46,6 +46,12 @@ spacing:
   xl: "40px"
   xxl: "56px"
 components:
+  terminal-zone:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    rounded: "{rounded.none}"
+  terminal-cursor:
+    color: "{colors.spot}"
   button-primary:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.paper}"
@@ -95,6 +101,7 @@ This is a portfolio piece. The craft is the argument. Invisible polish — contr
 - One spot color (printing red `#a23b2b`) used as a live indicator, a focus state, and nothing else
 - Motion is editorial: headlines settle into place, cards arrive as the reader scrolls, never as a choreographed show
 - The newsprint grain texture prevents the paper palette from reading as AI-generated cream
+- Three isolated **terminal accent zones** (the Ticker, the Chat Widget, the Trending rubric header) surface the machine underneath the newsprint — a console reading out the wire feed live — without ever letting that register bleed into the page's paper/ink base
 
 ## 2. Colors: The Ink & Newsprint Palette
 
@@ -152,7 +159,32 @@ Shadows appear only in two exceptional contexts:
 ### Named Rules
 **The Flat-By-Default Rule.** Surfaces are flat at rest. A card is distinguished from the background by its tonal step (clip vs. paper), not by elevation. Adding a shadow to a card is prohibited — it converts an editorial clipping into a SaaS product card, which is the exact aesthetic this system rejects.
 
-## 5. Components
+## 5. Terminal Accent System
+
+The wire room has a machine in the back — a console reading the feed live. This is expressed in exactly **three isolated zones**: the **Ticker**, the **Chat Widget**, and the **Trending rubric header**. Everywhere else, the page stays paper/ink. The terminal register is a room within the room, not a redecoration of the room.
+
+### Rationale
+The paper/ink surface is the *page* — what's already been typeset, printed, settled. The terminal is the *machine* — what's still being transmitted, live, unedited. Confining the terminal register to these two zones keeps that distinction legible: readers browsing the news are reading print; the moment they check the live ticker or ask the assistant a question, they're looking directly at the wire.
+
+### Terminal Zone Recipe
+- **Background:** `{colors.ink}` — no new dark token. The near-black already used for the FAB and ticker badge becomes the full zone background here, not just a badge chip.
+- **Text:** `{colors.paper}` at monospace (IBM Plex Mono). No new text color — the terminal zone is the paper/ink relationship inverted, not a new palette.
+- **Cursor / liveness marker:** `{colors.spot}` as a blinking block cursor (`▍`) or caret, replacing dots or generic spinners inside terminal zones. This is the *only* place the spot color is allowed to blink — everywhere else in the system, spot is static.
+- **Scanline texture:** repeating horizontal lines, `rgba(233, 225, 208, 0.04)` (paper at 4% opacity) every 3px, `background-size: 100% 3px`. The dark-mode sibling of the existing newsprint grain — same principle (texture prevents a flat AI-generated fill), inverted for a dark surface.
+- **Corner style:** 0px radius, matching the rest of the system. Terminal zones are still cut-edge, not rounded — the machine doesn't get to be softer than the page.
+- **Typing/reveal motion:** where content appears in a terminal zone (ticker headline, chat typing state), prefer a **character-reveal ("typewriter") effect** or a **blinking cursor** over the crossfade/slide used on the paper surface. This is the one place a different motion vocabulary is allowed, because it signals "live transmission" rather than "editorial reveal." Still needs a `prefers-reduced-motion` fallback: swap typewriter for instant text + static (non-blinking) cursor.
+
+### Where It Applies
+- **Ticker (Wire Rotator):** the *entire bar* becomes a terminal zone — ink background with scanline texture, replacing the current clip-background bar with an ink badge. The rotating headline is preceded by a blinking spot-colored cursor and revealed with a brief typewriter effect on each rotation, replacing the slide+fade.
+- **Chat Widget:** the FAB and panel header already use ink — extend the terminal treatment to the scanline texture on those ink surfaces, and replace the three-dot typing indicator with a single blinking spot-colored block cursor. The message panel body stays paper/clip (readable, print-register) — only the ink surfaces (FAB, header strip) get the terminal treatment.
+- **Trending rubric header:** the "Trending / Most read this week" header strip becomes a terminal zone — ink + scanline, mono uppercase paper text, with the same blinking spot cursor. Justification per the Named Rule below: Trending is the one editorial section that genuinely updates live (it re-fetches on every vote via `ARTICLE_VOTED_EVENT`), so a live-wire readout for its header is earned, not decorative. The ranked list itself (serif rank numbers, headline, vote count) stays print-register — only the header strip is terminal.
+
+### Named Rules
+**The Three-Zone Rule.** Terminal accents live in the Ticker, the Chat Widget, and the Trending rubric header — full stop. Do not extend scanlines, blinking cursors, or ink-zone treatments to cards, the masthead, the Hero, or the Trending list items themselves — those are print, not machine. A fourth zone needs the same justification test applied to Trending: does this element genuinely represent a live, unedited feed, or is it just "it would look cool" on typeset content?
+
+**No Fifth Color.** The terminal zones reuse `ink` / `paper` / `spot` exactly as defined elsewhere. Introducing a phosphor-green or amber "terminal color" is explicitly rejected — it would violate the One Spot Rule and turn accent zones into a competing palette.
+
+## 6. Components
 
 ### Masthead
 The publication's identity. Two rows: a folio line (dateline, search, live dot, auth) separated by a hairline rule, and the nameplate in Fraunces Black. The bottom of the nameplate is sealed by a 3px ink rule — the heaviest rule on the page — which signals "below this line is content."
@@ -160,10 +192,11 @@ The publication's identity. Two rows: a folio line (dateline, search, live dot, 
 - **Nameplate:** Fraunces Black, `clamp(44px, 9vw, 92px)`, tracking -0.015em, centered
 - **Heavy rule:** `border-bottom: 3px solid var(--ink)` — used here and in the footer only
 
-### Ticker (Wire Rotator)
-A horizontal bar beneath the masthead on a clipping background. A black badge — "● LATEST" in IBM Plex Mono — tabs the content on the left; a single rotating headline runs to the right. Headlines rotate every 4.2s with a GSAP slide+fade (y: ±8px, opacity 0↔1). Respects `prefers-reduced-motion`.
-- **Badge:** ink background, paper text, 11px mono uppercase, no border radius
-- **Headline:** 12.5px IBM Plex Mono, truncated to single line, hover to spot
+### Ticker (Wire Rotator) — Terminal Zone
+A horizontal bar beneath the masthead, now a full **terminal accent zone** (see §5): ink background with scanline texture, replacing the previous clip-background bar. A "● LATEST" badge in IBM Plex Mono tabs the content on the left; a blinking spot-colored cursor precedes the rotating headline, which reveals with a brief typewriter effect on each rotation (was: slide+fade). Respects `prefers-reduced-motion` (falls back to instant text swap + static cursor).
+- **Zone background:** ink + scanline texture (`rgba(233,225,208,0.04)` horizontal lines, 3px)
+- **Badge:** ink background (blends into the zone), paper text, 11px mono uppercase, no border radius
+- **Headline:** paper text, 12.5px IBM Plex Mono, preceded by spot-colored blinking cursor, truncated to single line, hover to spot
 
 ### News Cards (Clippings)
 - **Corner Style:** None (0px radius). Cards are newspaper clippings — they have cut edges, not rounded corners.
@@ -190,16 +223,18 @@ Sobrio con carácter — cold in form, warm in type.
 An underlined search field set in IBM Plex Mono, expanding on focus from 28 to 40ch. No box, no background — the underline is the boundary. Focus shifts border to spot color.
 
 ### Chat Widget (Signature Component)
-A floating chat assistant with an ink-colored FAB. The panel is a 380px-wide paper-palette container with editorial styling: user messages in ink/paper bubbles, assistant messages in clipping/rule containers. Suggestion chips are clipping-background with rule borders and squared corners. The textarea uses IBM Plex Mono to keep caret-to-placeholder alignment precise.
-- **FAB:** 48px, circular, ink background, paper icon, warm shadow
-- **Panel:** 4px radius, rule-strong border, paper background
-- **User bubble:** ink background, paper text, 2px radius
-- **Assistant bubble:** clip background, rule border, ink text, 2px radius
+A floating chat assistant. The FAB and panel header are the widget's **terminal accent zone** (see §5): ink background with scanline texture. The panel body stays paper-palette — editorial styling: user messages in ink/paper bubbles, assistant messages in clipping/rule containers. Suggestion chips are clipping-background with rule borders and squared corners. The textarea uses IBM Plex Mono to keep caret-to-placeholder alignment precise. The typing indicator is a single blinking spot-colored block cursor (`▍`), not three dots — the terminal zone's liveness marker, not a generic spinner.
+- **FAB:** ink background + scanline texture, paper icon, warm shadow, 0px radius (square, not circular — matches the rest of the system)
+- **Panel:** 0px radius, rule-strong border, paper background
+- **Panel header:** ink background + scanline texture (terminal zone), paper text
+- **User bubble:** ink background, paper text, 0px radius
+- **Assistant bubble:** clip background, rule border, ink text, 0px radius
+- **Typing indicator:** single blinking spot-colored block cursor, terminal zone only
 
 ### Filter Bar (Section Tabs)
 Section tabs styled as newspaper column tabs — text-only, no box, no background. Active tab: 2px bottom border in spot color, ink text. Inactive: transparent border, ink-soft text. IBM Plex Mono 12px uppercase.
 
-## 6. Do's and Don'ts
+## 7. Do's and Don'ts
 
 ### Do:
 - **Do** use `text-wrap: balance` on all h1–h3 headings to prevent uneven line breaks at narrow viewports.
@@ -210,6 +245,7 @@ Section tabs styled as newspaper column tabs — text-only, no box, no backgroun
 - **Do** preserve the newsprint grain texture (`body::before` SVG noise at 5% opacity). Without it, the paper palette collapses into AI cream.
 - **Do** include `prefers-reduced-motion` alternatives for every GSAP animation: skip y-transforms, crossfade only.
 - **Do** verify contrast before choosing a muted color. `--ink-soft` (#6b6155) on `--paper` (#e9e1d0) passes 4.5:1. `--ink-mute` (#948a79) on paper is for placeholders and captions only — never body copy.
+- **Do** confine terminal accents (scanlines, blinking cursors, typewriter reveals) to the Ticker, Chat Widget, and Trending rubric header's ink surfaces only (see §5). These three zones read as "the machine"; everywhere else reads as "the page."
 
 ### Don't:
 - **Don't** use `background-clip: text` with a gradient. The hero italic flourish is a flat spot-color italic, not gradient text. Gradient text is banned.
@@ -222,3 +258,5 @@ Section tabs styled as newspaper column tabs — text-only, no box, no backgroun
 - **Don't** use numbered section markers (01 / 02 / 03) as scaffolding. Numbers earn their place only in the Trending "Most Read" list, where the ordinal carries editorial meaning.
 - **Don't** soften the color contrast "for elegance." Muted text is the single biggest reason AI designs feel hard to read. If text is in `--ink-soft` it must hit 4.5:1; if it doesn't, darken it — don't accept it.
 - **Don't** use glassmorphism, backdrop-filter as decoration, or blurred card backgrounds. Not in this system.
+- **Don't** extend the terminal accent (scanlines, blinking cursor, ink-zone background) to cards, the masthead, the Hero, or any paper-surface component. It is a two-zone system (Ticker, Chat Widget) — a third zone needs its own justification, not just "it would look cool."
+- **Don't** introduce a phosphor-green, amber, or any new "terminal color." Terminal zones reuse ink/paper/spot exactly as defined — a fifth color breaks the One Spot Rule.

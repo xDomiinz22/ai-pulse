@@ -51,13 +51,17 @@ export default function Card({ article, featured = false }: Props) {
   return (
     <article className="card-item flex flex-col gap-3 bg-[var(--clip)] border border-[var(--rule)] p-6 transition-colors duration-200 hover:bg-[var(--clip-h)] hover:border-[var(--rule-strong)]">
 
-      {/* Kicker: section + dateline */}
-      <div className="flex items-center justify-between gap-3">
-        <span className="flex items-center gap-2 wire text-[var(--ink)]">
+      {/* Kicker: section + dateline — terminal accent zone (DESIGN.md §5) */}
+      <div className="terminal-zone relative -mx-6 -mt-6 flex items-center justify-between gap-3 px-4 py-2">
+        <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--paper)]">
           <span className="w-[7px] h-[7px] bg-[var(--spot)]" />
           {CATEGORY_LABELS[article.category] ?? article.category}
         </span>
-        {dateline && <span className="wire" title={relative ?? undefined}>{dateline}</span>}
+        {dateline && (
+          <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--paper)] opacity-60" title={relative ?? undefined}>
+            {dateline}
+          </span>
+        )}
       </div>
 
       {/* Headline */}

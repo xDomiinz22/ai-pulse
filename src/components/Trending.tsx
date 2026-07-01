@@ -2,6 +2,23 @@ import { useEffect, useState, useCallback } from 'react'
 import type { Article } from '../types'
 import { API, ARTICLE_VOTED_EVENT } from '../lib/api'
 
+// Section rubric, styled as a terminal accent zone (DESIGN.md §5): Trending
+// is the one editorial section that genuinely re-fetches live on every vote,
+// so a live-wire readout for its header is earned, not decorative.
+function TrendingHeader() {
+  return (
+    <div className="terminal-zone relative rule-bottom flex items-center gap-3 mb-4 px-4 py-2">
+      <h2 className="flex-none font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--paper)]">
+        Trending
+      </h2>
+      <span className="term-cursor text-[var(--spot)] font-mono text-[13px] leading-none select-none" aria-hidden="true">▍</span>
+      <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--paper)] opacity-70">
+        Most read this week
+      </span>
+    </div>
+  )
+}
+
 export default function Trending() {
   const [items, setItems] = useState<Article[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -31,12 +48,7 @@ export default function Trending() {
     if (!loaded) return null
     return (
       <section className="mb-12">
-        <div className="flex items-center gap-3 mb-4 rule-bottom pb-2">
-          <h2 className="font-display text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--ink)]">
-            Trending
-          </h2>
-          <span className="wire">Most read this week</span>
-        </div>
+        <TrendingHeader />
         <p className="wire text-[var(--ink-mute)] py-3">
           No votes yet — be the first to weigh in on today's dispatches.
         </p>
@@ -46,13 +58,7 @@ export default function Trending() {
 
   return (
     <section className="mb-12">
-      {/* Section header, set like a newspaper rubric */}
-      <div className="flex items-center gap-3 mb-4 rule-bottom pb-2">
-        <h2 className="font-display text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--ink)]">
-          Trending
-        </h2>
-        <span className="wire">Most read this week</span>
-      </div>
+      <TrendingHeader />
 
       <ol className="grid sm:grid-cols-2 gap-x-8">
         {items.map((a, i) => (
