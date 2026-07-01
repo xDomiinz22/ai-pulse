@@ -101,7 +101,7 @@ This is a portfolio piece. The craft is the argument. Invisible polish — contr
 - One spot color (printing red `#a23b2b`) used as a live indicator, a focus state, and nothing else
 - Motion is editorial: headlines settle into place, cards arrive as the reader scrolls, never as a choreographed show
 - The newsprint grain texture prevents the paper palette from reading as AI-generated cream
-- Two isolated **terminal accent zones** (the Ticker, the Chat Widget) surface the machine underneath the newsprint — a console reading out the wire feed live — without ever letting that register bleed into the page's paper/ink base
+- Three isolated **terminal accent zones** (the Ticker, the Chat Widget, the Trending rubric header) surface the machine underneath the newsprint — a console reading out the wire feed live — without ever letting that register bleed into the page's paper/ink base
 
 ## 2. Colors: The Ink & Newsprint Palette
 
@@ -161,7 +161,7 @@ Shadows appear only in two exceptional contexts:
 
 ## 5. Terminal Accent System
 
-The wire room has a machine in the back — a console reading the feed live. This is expressed in exactly **two isolated zones**: the **Ticker** and the **Chat Widget**. Everywhere else, the page stays paper/ink. The terminal register is a room within the room, not a redecoration of the room.
+The wire room has a machine in the back — a console reading the feed live. This is expressed in exactly **three isolated zones**: the **Ticker**, the **Chat Widget**, and the **Trending rubric header**. Everywhere else, the page stays paper/ink. The terminal register is a room within the room, not a redecoration of the room.
 
 ### Rationale
 The paper/ink surface is the *page* — what's already been typeset, printed, settled. The terminal is the *machine* — what's still being transmitted, live, unedited. Confining the terminal register to these two zones keeps that distinction legible: readers browsing the news are reading print; the moment they check the live ticker or ask the assistant a question, they're looking directly at the wire.
@@ -177,11 +177,12 @@ The paper/ink surface is the *page* — what's already been typeset, printed, se
 ### Where It Applies
 - **Ticker (Wire Rotator):** the *entire bar* becomes a terminal zone — ink background with scanline texture, replacing the current clip-background bar with an ink badge. The rotating headline is preceded by a blinking spot-colored cursor and revealed with a brief typewriter effect on each rotation, replacing the slide+fade.
 - **Chat Widget:** the FAB and panel header already use ink — extend the terminal treatment to the scanline texture on those ink surfaces, and replace the three-dot typing indicator with a single blinking spot-colored block cursor. The message panel body stays paper/clip (readable, print-register) — only the ink surfaces (FAB, header strip) get the terminal treatment.
+- **Trending rubric header:** the "Trending / Most read this week" header strip becomes a terminal zone — ink + scanline, mono uppercase paper text, with the same blinking spot cursor. Justification per the Named Rule below: Trending is the one editorial section that genuinely updates live (it re-fetches on every vote via `ARTICLE_VOTED_EVENT`), so a live-wire readout for its header is earned, not decorative. The ranked list itself (serif rank numbers, headline, vote count) stays print-register — only the header strip is terminal.
 
 ### Named Rules
-**The Two-Zone Rule.** Terminal accents live in the Ticker and the Chat Widget, full stop. Do not extend scanlines, blinking cursors, or ink-zone treatments to cards, the masthead, or the Hero — those are print, not machine. If a third zone is ever proposed, it needs its own justification for why it's "live wire" rather than "typeset page," not just "it would look cool."
+**The Three-Zone Rule.** Terminal accents live in the Ticker, the Chat Widget, and the Trending rubric header — full stop. Do not extend scanlines, blinking cursors, or ink-zone treatments to cards, the masthead, the Hero, or the Trending list items themselves — those are print, not machine. A fourth zone needs the same justification test applied to Trending: does this element genuinely represent a live, unedited feed, or is it just "it would look cool" on typeset content?
 
-**No Fifth Color.** The terminal zones reuse `ink` / `paper` / `spot` exactly as defined elsewhere. Introducing a phosphor-green or amber "terminal color" is explicitly rejected — it would violate the One Spot Rule and turn two accent zones into a competing palette.
+**No Fifth Color.** The terminal zones reuse `ink` / `paper` / `spot` exactly as defined elsewhere. Introducing a phosphor-green or amber "terminal color" is explicitly rejected — it would violate the One Spot Rule and turn accent zones into a competing palette.
 
 ## 6. Components
 
@@ -244,7 +245,7 @@ Section tabs styled as newspaper column tabs — text-only, no box, no backgroun
 - **Do** preserve the newsprint grain texture (`body::before` SVG noise at 5% opacity). Without it, the paper palette collapses into AI cream.
 - **Do** include `prefers-reduced-motion` alternatives for every GSAP animation: skip y-transforms, crossfade only.
 - **Do** verify contrast before choosing a muted color. `--ink-soft` (#6b6155) on `--paper` (#e9e1d0) passes 4.5:1. `--ink-mute` (#948a79) on paper is for placeholders and captions only — never body copy.
-- **Do** confine terminal accents (scanlines, blinking cursors, typewriter reveals) to the Ticker and Chat Widget's ink surfaces only (see §5). These two zones read as "the machine"; everywhere else reads as "the page."
+- **Do** confine terminal accents (scanlines, blinking cursors, typewriter reveals) to the Ticker, Chat Widget, and Trending rubric header's ink surfaces only (see §5). These three zones read as "the machine"; everywhere else reads as "the page."
 
 ### Don't:
 - **Don't** use `background-clip: text` with a gradient. The hero italic flourish is a flat spot-color italic, not gradient text. Gradient text is banned.
