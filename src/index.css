@@ -44,6 +44,7 @@
 @layer base {
   html { scroll-behavior: smooth; overflow-x: hidden; }
   body {
+    position: relative;
     font-family: var(--font-body);
     color: var(--ink);
     background-color: var(--paper);
@@ -56,10 +57,13 @@
   h1, h2, h3 { font-family: var(--font-display); }
 }
 
-/* Faint newsprint grain so the paper never reads as a flat AI cream fill. */
+/* Faint newsprint grain so the paper never reads as a flat AI cream fill.
+   position: absolute (not fixed) — stamped into the document, scrolls with
+   the page like real paper texture, rather than staying glued to the
+   viewport. Requires body { position: relative } above. */
 body::before {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
@@ -70,12 +74,13 @@ body::before {
 
 /* Crumpled-paper crease shadows — coarser and lower-frequency than the grain
    above (folds, not speckle). Diffuse-lit noise via SVG filter, multiplied
-   at low opacity. Fixed + z-index:0 like the grain, so opaque content
-   (cards, terminal zones) paints over it and is unaffected — this only
-   reads on exposed --paper background (Hero, gaps, margins). */
+   at low opacity. position: absolute (not fixed), same reasoning as the
+   grain above — stamped into the page, scrolls with content. z-index:0 so
+   opaque content (cards, terminal zones) paints over it and is unaffected —
+   this only reads on exposed --paper background (Hero, gaps, margins). */
 body::after {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
