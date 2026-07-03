@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef } from 'react'
 import { GOOGLE_CLIENT_ID } from '../lib/api'
 

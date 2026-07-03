@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState, useCallback } from 'react'
 import type { Article } from '../types'
 import { API, ARTICLE_VOTED_EVENT } from '../lib/api'
