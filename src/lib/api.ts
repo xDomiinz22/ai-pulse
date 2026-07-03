@@ -1,9 +1,10 @@
 // In production (Vercel "Services") the backend lives on the same origin under
 // /api, so requests are relative (e.g. "/api/auth/login"). In local dev they
-// go to the standalone backend on :3001. An explicit VITE_API_URL always wins
-// if set; otherwise we pick based on the build mode.
+// go to the standalone backend on :3001. An explicit NEXT_PUBLIC_API_URL
+// always wins if set; otherwise we pick based on the build mode.
 export const API =
-  import.meta.env.VITE_API_URL ?? (import.meta.env.PROD ? '' : 'http://localhost:3001')
+  process.env.NEXT_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001')
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ export interface User {
 // Public Google OAuth Client ID (safe to ship in the frontend). Overridable
 // via env; defaults to the project's client so local dev works with no setup.
 export const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ??
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ??
   '981095267383-jd4d70oquqn2hapea4e9eb88hllg8u7b.apps.googleusercontent.com'
 
 // Reads the readable CSRF token cookie (set by the backend on login/register)
