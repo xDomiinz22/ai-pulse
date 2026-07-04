@@ -9,21 +9,24 @@ import serverAssets from './entry-server?assets=ssr'
 const VALID_FILTERS: FilterValue[] = ['all', 'model', 'research', 'industry', 'ethics']
 
 // Same origin/port convention as src/lib/api.ts: standalone Express backend
-// on :3001 locally. On Vercel the two "services" share the deployment
-// origin, but a server-side fetch still needs an absolute URL (there's no
-// browser to resolve a relative one against) — VERCEL_URL is the platform's
-// own env var for "this deployment's hostname," always set at runtime.
-const API_BASE =
-  process.env.API_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3001')
+// on :3001 locally. On Vercel the two "services" share one deployment, so
+// the incoming request's own origin is the correct base — and the *only*
+// reliable one. VERCEL_URL looked right (it's "this deployment's hostname")
+// but Standard Deployment Protection blocks it with a 302 redirect on any
+// anonymous fetch, including our own server-side one, silently breaking SSR.
+function apiBase(requestOrigin: string): string {
+  if (process.env.API_URL) return process.env.API_URL
+  if (process.env.VERCEL) return requestOrigin
+  return 'http://localhost:3001'
+}
 
 interface ListPayload {
   data: Article[]
 }
 
-async function fetchJson<T>(path: string): Promise<T | null> {
+async function fetchJson<T>(base: string, path: string): Promise<T | null> {
   try {
-    const res = await fetch(`${API_BASE}${path}`)
+    const res = await fetch(`${base}${path}`)
     if (!res.ok) return null
     return (await res.json()) as T
   } catch {
@@ -34,6 +37,7 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 async function loadInitialData(url: URL): Promise<InitialData> {
+  const base = apiBase(url.origin)
   const rawFilter = url.searchParams.get('filter') as FilterValue | null
   const filter: FilterValue = rawFilter && VALID_FILTERS.includes(rawFilter) ? rawFilter : 'all'
   const query = url.searchParams.get('q') ?? ''
@@ -44,9 +48,9 @@ async function loadInitialData(url: URL): Promise<InitialData> {
   listParams.set('limit', '50')
 
   const [list, counts, tickerList] = await Promise.all([
-    fetchJson<ListPayload>(`/api/articles?${listParams}`),
-    fetchJson<Record<string, number>>('/api/articles/category-counts'),
-    fetchJson<ListPayload>('/api/articles?limit=12'),
+    fetchJson<ListPayload>(base, `/api/articles?${listParams}`),
+    fetchJson<Record<string, number>>(base, '/api/articles/category-counts'),
+    fetchJson<ListPayload>(base, '/api/articles?limit=12'),
   ])
 
   return {
