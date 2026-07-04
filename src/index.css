@@ -1,16 +1,29 @@
 @import "tailwindcss";
 
+/* Self-hosted fonts (fontsource) — replaces the Google Fonts CDN <link> in
+   entry-server.tsx. Same families/axes/weights as before, just bundled with
+   the app instead of fetched from fonts.googleapis.com/fonts.gstatic.com on
+   every visit. "full"/"opsz" variants preserve the optical-size axis the
+   original Google Fonts URL requested (Fraunces 9..144, Newsreader 6..72). */
+@import "@fontsource-variable/fraunces/full.css";
+@import "@fontsource-variable/fraunces/full-italic.css";
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
 /* ── Typefaces ───────────────────────────────────────────────────────────
    Fraunces  → editorial display serif (masthead, headlines)
    Newsreader → news body serif (article text, ledes)
    IBM Plex Mono → the "wire/teletype" voice (datelines, sources, labels) */
 @theme {
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-body:    'Newsreader', Georgia, serif;
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-body:    'Newsreader Variable', Georgia, serif;
   --font-mono:    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
   /* Legacy aliases kept so existing utility classes keep resolving. */
-  --font-sans:    'Newsreader', Georgia, serif;
-  --font-head:    'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans:    'Newsreader Variable', Georgia, serif;
+  --font-head:    'Fraunces Variable', Georgia, 'Times New Roman', serif;
 }
 
 /* ── Color tokens: ink on newsprint (light only) ─────────────────────────

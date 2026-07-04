@@ -80,12 +80,8 @@ export default {
           <meta charSet="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>AI Pulse — Artificial Intelligence News</title>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-            rel="stylesheet"
-          />
+          {/* Fonts are self-hosted (fontsource, imported in index.css) —
+              no more fonts.googleapis.com/fonts.gstatic.com round trips. */}
           {assets.css.map((attr: Record<string, string>) => (
             <link key={attr.href} rel="stylesheet" {...attr} />
           ))}
