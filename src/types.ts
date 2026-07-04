@@ -15,3 +15,19 @@ export interface Article {
   votes_up: number
   votes_down: number
 }
+
+export interface Head {
+  title: string
+  url: string
+}
+
+// Server-rendered payload serialized into the HTML (window.__INITIAL_DATA__)
+// so the client hydrates with the same data the server already fetched,
+// instead of re-fetching and flashing an empty/loading state.
+export interface InitialData {
+  filter: FilterValue
+  query: string
+  articles: Article[]
+  counts: Record<string, number>
+  heads: Head[]
+}

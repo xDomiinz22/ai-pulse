@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Fuse from 'fuse.js'
-import type { Article, FilterValue } from './types'
+import type { Article, FilterValue, InitialData } from './types'
 import Header from './components/Header'
 import Ticker from './components/Ticker'
 import Hero from './components/Hero'
@@ -13,6 +13,9 @@ import { API } from './lib/api'
 
 const VALID_FILTERS: FilterValue[] = ['all', 'model', 'research', 'industry', 'ethics']
 
+// Only ever used client-side (window access), as a fallback for the rare
+// case initialData didn't arrive from the server — normal SSR requests
+// always provide it, so this mainly covers a failed SSR fetch.
 function readUrlParams(): { filter: FilterValue; query: string } {
   const params = new URLSearchParams(window.location.search)
   const f = params.get('filter') as FilterValue | null
@@ -22,13 +25,25 @@ function readUrlParams(): { filter: FilterValue; query: string } {
   }
 }
 
-export default function App() {
-  const [filter, setFilter]  = useState<FilterValue>(() => readUrlParams().filter)
-  const [query,  setQuery]   = useState<string>(() => readUrlParams().query)
-  const [articles, setArticles] = useState<Article[]>([])
-  const [loading, setLoading]   = useState(true)
+interface Props {
+  initialData?: InitialData
+}
+
+export default function App({ initialData }: Props) {
+  const [filter, setFilter] = useState<FilterValue>(
+    initialData?.filter ?? (typeof window !== 'undefined' ? readUrlParams().filter : 'all'),
+  )
+  const [query, setQuery] = useState<string>(
+    initialData?.query ?? (typeof window !== 'undefined' ? readUrlParams().query : ''),
+  )
+  const [articles, setArticles] = useState<Article[]>(initialData?.articles ?? [])
+  const [loading, setLoading]   = useState(!initialData)
   const [error, setError]       = useState<string | null>(null)
-  const [counts, setCounts]     = useState<Record<string, number>>({})
+  const [counts, setCounts]     = useState<Record<string, number>>(initialData?.counts ?? {})
+
+  // The server already rendered this exact filter/query combination; skip
+  // the redundant client refetch on hydration and only fetch when they change.
+  const hydratedWithData = useRef(!!initialData)
 
   const fetchArticles = useCallback(async () => {
     setLoading(true)
@@ -52,6 +67,10 @@ export default function App() {
   }, [filter, query])
 
   useEffect(() => {
+    if (hydratedWithData.current) {
+      hydratedWithData.current = false
+      return
+    }
     const id = setTimeout(fetchArticles, query.trim() ? 400 : 0)
     return () => clearTimeout(id)
   }, [fetchArticles, query])
@@ -66,12 +85,15 @@ export default function App() {
   }, [filter, query])
 
   // Real per-category counts for the filter tooltips (independent of the
-  // active filter, so the numbers always reflect the whole dataset).
+  // active filter, so the numbers always reflect the whole dataset). Only
+  // fetched client-side when the server didn't already provide them.
   useEffect(() => {
+    if (initialData && Object.keys(initialData.counts).length > 0) return
     fetch(`${API}/api/articles/category-counts`)
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) setCounts(data) })
       .catch(console.error)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fuse = useMemo(
@@ -102,7 +124,7 @@ export default function App() {
         query={query}
         onQueryChange={setQuery}
       />
-      <Ticker />
+      <Ticker initialHeads={initialData?.heads} />
 
       <main>
         <Hero />
