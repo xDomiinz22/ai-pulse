@@ -37,41 +37,56 @@ export default function App({ initialData }: Props) {
     initialData?.query ?? (typeof window !== 'undefined' ? readUrlParams().query : ''),
   )
   const [articles, setArticles] = useState<Article[]>(initialData?.articles ?? [])
+  const [total, setTotal]       = useState(initialData?.total ?? 0)
   const [loading, setLoading]   = useState(!initialData)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [counts, setCounts]     = useState<Record<string, number>>(initialData?.counts ?? {})
 
   // The server already rendered this exact filter/query combination; skip
   // the redundant client refetch on hydration and only fetch when they change.
   const hydratedWithData = useRef(!!initialData)
+  const pageRef = useRef(1)
 
-  const fetchArticles = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const PAGE_SIZE = 50
+
+  // page=1 always replaces (filter/query changed, or first load); page>1
+  // appends (user clicked "Load more").
+  const fetchArticles = useCallback(async (page: number) => {
+    if (page === 1) { setLoading(true); setError(null) } else { setLoadingMore(true) }
     try {
       const params = new URLSearchParams()
       if (filter !== 'all') params.set('category', filter)
       if (query.trim())     params.set('q', query.trim())
-      params.set('limit', '50')
+      params.set('page', String(page))
+      params.set('limit', String(PAGE_SIZE))
 
       const res = await fetch(`${API}/api/articles?${params}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      setArticles(data.data ?? [])
+      setArticles(prev => (page === 1 ? (data.data ?? []) : [...prev, ...(data.data ?? [])]))
+      setTotal(data.total ?? 0)
+      pageRef.current = page
     } catch (e) {
-      setError('Could not load news articles.')
+      if (page === 1) setError('Could not load news articles.')
       console.error(e)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
   }, [filter, query])
+
+  const loadMore = useCallback(() => {
+    fetchArticles(pageRef.current + 1)
+  }, [fetchArticles])
 
   useEffect(() => {
     if (hydratedWithData.current) {
       hydratedWithData.current = false
       return
     }
-    const id = setTimeout(fetchArticles, query.trim() ? 400 : 0)
+    pageRef.current = 1
+    const id = setTimeout(() => fetchArticles(1), query.trim() ? 400 : 0)
     return () => clearTimeout(id)
   }, [fetchArticles, query])
 
@@ -142,7 +157,11 @@ export default function App({ initialData }: Props) {
               </h2>
               {!loading && (
                 <span className="wire">
-                  {visibleArticles.length} article{visibleArticles.length !== 1 ? 's' : ''}
+                  {query.trim()
+                    ? `${visibleArticles.length} article${visibleArticles.length !== 1 ? 's' : ''}`
+                    : articles.length < total
+                      ? `${articles.length} of ${total} articles`
+                      : `${articles.length} article${articles.length !== 1 ? 's' : ''}`}
                 </span>
               )}
             </div>
@@ -153,14 +172,27 @@ export default function App({ initialData }: Props) {
               <div className="flex flex-col items-center gap-4 py-16">
                 <p className="wire text-[var(--ink-soft)]">{error}</p>
                 <button
-                  onClick={fetchArticles}
+                  onClick={() => fetchArticles(1)}
                   className="wire text-[var(--ink)] hover:text-[var(--spot)] border-b border-[var(--rule-strong)] hover:border-[var(--spot)] transition-colors pb-0.5 cursor-pointer"
                 >
                   Try again →
                 </button>
               </div>
             ) : (
-              <NewsGrid articles={visibleArticles} loading={loading} />
+              <>
+                <NewsGrid articles={visibleArticles} loading={loading} />
+                {!loading && !query.trim() && articles.length < total && (
+                  <div className="flex justify-center pt-10">
+                    <button
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="wire text-[var(--ink)] hover:text-[var(--spot)] border-b border-[var(--rule-strong)] hover:border-[var(--spot)] transition-colors pb-0.5 disabled:opacity-50 disabled:cursor-wait cursor-pointer"
+                    >
+                      {loadingMore ? 'Loading…' : 'Load more →'}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
           </div>

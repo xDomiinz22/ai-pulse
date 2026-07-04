@@ -28,6 +28,7 @@ export interface InitialData {
   filter: FilterValue
   query: string
   articles: Article[]
+  total: number
   counts: Record<string, number>
   heads: Head[]
 }

@@ -13,24 +13,38 @@ interface Props {
 
 export default function NewsGrid({ articles, loading }: Props) {
   const gridRef = useRef<HTMLDivElement>(null)
+  const ctxRef = useRef<gsap.Context | null>(null)
+
+  useLayoutEffect(() => {
+    if (!gridRef.current) return
+    ctxRef.current = gsap.context(() => {}, gridRef)
+    return () => ctxRef.current?.revert()
+  }, [])
 
   // Discreet scroll reveal: each clipping fades up as it enters the viewport,
   // in small batches. Cards already in view animate in immediately on load.
+  // Only NEW cards (no data-revealed yet) are targeted — on a filter/search
+  // change the old cards unmount entirely so this naturally covers a full
+  // reset, and on "Load more" (append) it skips re-animating cards the
+  // reader has already seen instead of flashing the whole grid again.
   useLayoutEffect(() => {
     if (!gridRef.current || articles.length === 0) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const ctx = gsap.context(() => {
-      gsap.set('.card-item', { opacity: 0, y: 24 })
-      ScrollTrigger.batch('.card-item', {
+    const newCards = gridRef.current.querySelectorAll('.card-item:not([data-revealed="true"])')
+    if (newCards.length === 0) return
+
+    ctxRef.current?.add(() => {
+      gsap.set(newCards, { opacity: 0, y: 24 })
+      ScrollTrigger.batch(newCards, {
         start: 'top 88%',
-        onEnter: batch =>
-          gsap.to(batch, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out', overwrite: true }),
+        onEnter: batch => {
+          gsap.to(batch, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out', overwrite: true })
+          batch.forEach(el => el.setAttribute('data-revealed', 'true'))
+        },
       })
       ScrollTrigger.refresh()
-    }, gridRef)
-
-    return () => ctx.revert()
+    })
   }, [articles])
 
   if (loading && articles.length === 0) {

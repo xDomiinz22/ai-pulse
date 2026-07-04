@@ -22,6 +22,7 @@ function apiBase(requestOrigin: string): string {
 
 interface ListPayload {
   data: Article[]
+  total: number
 }
 
 async function fetchJson<T>(base: string, path: string): Promise<T | null> {
@@ -57,6 +58,7 @@ async function loadInitialData(url: URL): Promise<InitialData> {
     filter,
     query,
     articles: list?.data ?? [],
+    total: list?.total ?? 0,
     counts: counts ?? {},
     heads: (tickerList?.data ?? []).map(a => ({ title: a.title, url: a.url })),
   }
