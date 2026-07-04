@@ -32,7 +32,9 @@ export default function Header({ query, onQueryChange }: Props) {
       {/* ── Folio line: dateline + utilities ── */}
       <div className="rule-bottom">
         <div className="max-w-[1160px] mx-auto px-6 h-11 flex items-center gap-5">
-          <span className="wire hidden md:block">{dateline}</span>
+          {/* Server-rendered dateline; suppressHydrationWarning covers the
+              rare server/client date boundary (timezone / midnight) drift. */}
+          <span className="wire hidden md:block" suppressHydrationWarning>{dateline}</span>
 
           <div className="flex items-center gap-5 ml-auto">
             {/* Search — underlined, set in mono like a classified field */}
