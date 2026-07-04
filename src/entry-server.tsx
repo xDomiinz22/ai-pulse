@@ -9,8 +9,13 @@ import serverAssets from './entry-server?assets=ssr'
 const VALID_FILTERS: FilterValue[] = ['all', 'model', 'research', 'industry', 'ethics']
 
 // Same origin/port convention as src/lib/api.ts: standalone Express backend
-// on :3001 locally; on Vercel the two "services" share the deployment origin.
-const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
+// on :3001 locally. On Vercel the two "services" share the deployment
+// origin, but a server-side fetch still needs an absolute URL (there's no
+// browser to resolve a relative one against) — VERCEL_URL is the platform's
+// own env var for "this deployment's hostname," always set at runtime.
+const API_BASE =
+  process.env.API_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3001')
 
 interface ListPayload {
   data: Article[]
