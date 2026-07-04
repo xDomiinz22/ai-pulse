@@ -16,8 +16,9 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 - 🔌 **MCP server** — the same `search_articles` retrieval is exposed over the Model Context Protocol (Streamable HTTP), so any MCP client (Claude Desktop, Claude.ai connectors, Claude Code) can query the news with its own model.
 - 🔐 **Authentication** — email/password **and** Google Sign-In, with sessions delivered as httpOnly cookies (JWT never exposed to JS) + CSRF double-submit protection and a password-strength meter.
 - 👍 **Voting & Trending** — upvote/downvote (**logged-in users only**) with per-IP anti-spam; a live trending ranking backed by a Redis sorted set that updates instantly on vote.
-- 🔎 **Search & filters** — fuzzy client-side search (Fuse.js) and per-category filtering with real article counts.
-- 🎨 **Editorial design system** — "The Wire Room" aesthetic: Fraunces (display) + Newsreader (body) + IBM Plex Mono (wire labels), a single printing-red spot color (`#a23b2b`), 0px card radius, flat-by-default surfaces. Designed and iterated end-to-end with the [**impeccable**](https://github.com/anthropics/claude-code) Claude Code skill (critique → layout → adapt → polish → UX fixes). GSAP scroll reveals and GSAP-powered ticker.
+- 🔎 **Search & filters** — fuzzy client-side search (Fuse.js) and per-category filtering with real article counts, plus a "Load more" button that paginates within the active filter/search instead of silently capping the feed at 50.
+- ⚡ **Server-side rendering + ISR** — the homepage is server-rendered (Vite + Nitro) with the initial article batch, ticker, and counts embedded straight into the HTML — no client-side loading flash. The `/` route is additionally cached with Incremental Static Regeneration (30 min) so most visits are served instantly from Vercel's CDN with zero function invocation. See [Rendering: SSR + ISR](#rendering-ssr--isr) below.
+- 🎨 **Editorial design system** — "The Wire Room" aesthetic: Fraunces (display) + Newsreader (body) + IBM Plex Mono (wire labels), a single printing-red spot color (`#a23b2b`), 0px card radius, flat-by-default surfaces, and a "terminal accent" register (scanline texture + blinking cursor) confined to the ticker, chat widget, and trending header. Designed and iterated end-to-end with the [**impeccable**](https://github.com/anthropics/claude-code) Claude Code skill (critique → layout → adapt → polish → UX fixes). GSAP scroll reveals, GSAP-powered ticker, self-hosted fonts (fontsource — no Google Fonts CDN round trip).
 - 🛡️ **Hardened backend** — Helmet security headers, sliding-window rate limiting (Upstash), input caps, and graceful degradation when Redis is unavailable.
 
 ---
@@ -26,7 +27,7 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 
 | Layer        | Technologies                                                                 |
 | ------------ | ---------------------------------------------------------------------------- |
-| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS v4, GSAP, Fuse.js, date-fns         |
+| **Frontend** | React 19, Vite + [Nitro](https://nitro.build) (SSR + ISR), TypeScript, Tailwind CSS v4, GSAP, Fuse.js, date-fns, fontsource |
 | **Design**   | [impeccable](https://github.com/anthropics/claude-code) (Claude Code skill) — critique, layout, adapt, polish, UX audit; PRODUCT.md + DESIGN.md design system |
 | **Backend**  | Node.js, Express 5, TypeScript, Prisma 7                                      |
 | **Data**     | Neon (PostgreSQL + **pgvector**), Upstash Redis (cache, rate limiting, trending, JWT denylist) |
@@ -41,8 +42,11 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 
 ```
 .
-├── index.html              # Vite entry
+├── vite.config.ts          # Vite + Nitro + React + Tailwind plugins
+├── nitro.config.ts         # ISR routeRules for "/"
 ├── src/                    # Frontend (React)
+│   ├── entry-client.tsx    # hydrateRoot — reads window.__INITIAL_DATA__
+│   ├── entry-server.tsx    # Nitro SSR entry — fetches + renders + embeds data
 │   ├── components/         # Header, Hero, NewsGrid, Card, Trending, AuthModal, ChatWidget, …
 │   ├── context/            # AuthContext
 │   ├── hooks/              # useTheme
@@ -160,9 +164,26 @@ All backend secrets live in `backend/.env` (git-ignored). See [`backend/.env.exa
 
 ---
 
+## Rendering: SSR + ISR
+
+The homepage is server-rendered via [Nitro](https://nitro.build)'s Vite plugin, not a plain client-side SPA.
+
+**How it works:**
+
+1. `src/entry-server.tsx` receives the request, reads `filter`/`q` from the URL, and fetches articles + category counts + ticker headlines from the backend **in parallel**.
+2. It renders the full HTML document (`renderToReadableStream`) and embeds the fetched data as `window.__INITIAL_DATA__` inline in the response.
+3. `src/entry-client.tsx` reads that same payload and passes it to `<App>` on `hydrateRoot`, so the client renders identically to the server — no refetch, no loading flash, no hydration mismatch.
+4. `nitro.config.ts` additionally marks `/` as an **ISR** route (`expiration: 1800`, i.e. 30 min): Vercel caches the rendered HTML and serves it directly from its CDN, only re-invoking the function in the background once the cache expires. Most visits never touch the render function at all.
+
+**`allowQuery: ['filter', 'q']`** — both listed deliberately. A query param **not** in `allowQuery` isn't "always fresh": Vercel ignores it for the cache key entirely, meaning `/?q=OpenAI` could silently serve the cached `/` HTML for a *different* search. Listing both gives every filter+search combination its own correct, independently-cached entry.
+
+**Deployment Protection gotcha:** the server-side fetch inside `entry-server.tsx` calls the backend API using **the incoming request's own origin** (`new URL(req.url).origin`), not `process.env.VERCEL_URL`. `VERCEL_URL` points at the per-deployment hostname (e.g. `ai-pulse-<hash>-<team>.vercel.app`), and Vercel's Standard Deployment Protection returns a `302` redirect for anonymous requests to that hostname — including the app's own server-side fetch, which silently failed and rendered with an empty article list. Using the request's own origin sidesteps this entirely, since that's the domain that already successfully reached the function.
+
+---
+
 ## Deployment
 
-Deployed on **Vercel** as a **single project with two services** (Vercel "Services"), so the frontend (`/`) and the backend (`/api`) share one origin — which lets the httpOnly auth cookies work without cross-site issues. The configuration lives in [`vercel.json`](vercel.json) via `experimentalServices`.
+Deployed on **Vercel** as a **single project with two services** (Vercel "Services"), so the frontend (`/`) and the backend (`/api`) share one origin — which lets the httpOnly auth cookies work without cross-site issues, and lets the SSR fetch above resolve the backend at the same origin it was called from. The configuration lives in [`vercel.json`](vercel.json) via `experimentalServices`.
 
 Key points:
 
@@ -170,6 +191,7 @@ Key points:
 - Vercel **strips** the `/api` route prefix, so backend routes are mounted at root in production (handled automatically via the `VERCEL` env var).
 - Set the same environment variables from the table above in the Vercel dashboard — except `PORT` and `FRONTEND_URL`, which Vercel manages for you.
 - For Google login, add your deployment URL to the OAuth client's **Authorized JavaScript origins**.
+- If the ISR cache ever needs to be force-refreshed sooner than its 30-minute expiration (e.g. right after fixing a bug), the reliable option today is purging via the Vercel dashboard (Storage / Data Cache) — on-demand revalidation via `x-prerender-revalidate` isn't wired up yet.
 
 ---
 
