@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, type CSSProperties } from 'react'
 import { formatDistanceToNow, parseISO, format } from 'date-fns'
 import type { Article } from '../types'

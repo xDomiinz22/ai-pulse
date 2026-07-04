@@ -1,5 +1,3 @@
-'use client'
-
 import { format } from 'date-fns'
 
 export default function Footer() {
@@ -12,10 +10,7 @@ export default function Footer() {
         {/* End-of-transmission line */}
         <div className="rule-bottom pb-6 mb-6 flex items-center justify-between gap-4">
           <span className="wire text-[var(--ink-mute)]">— 30 —</span>
-          {/* Rendered on the server at request time; suppressHydrationWarning
-              keeps the server's timestamp instead of flagging the inevitable
-              server/client clock difference as a hydration mismatch. */}
-          <span className="wire text-[var(--ink-mute)]" suppressHydrationWarning>
+          <span className="wire text-[var(--ink-mute)]">
             Transmission closed · {transmission} UTC
           </span>
         </div>

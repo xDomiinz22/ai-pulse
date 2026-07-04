@@ -1,33 +1,25 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { API } from '../lib/api'
 
-export interface Head { title: string; url: string }
+interface Head { title: string; url: string }
 
 // A single-headline "wire" rotator that sits under the masthead — the
 // interface's terminal accent zone (DESIGN.md §5). Cycles the latest
 // headlines one at a time with a typewriter reveal behind a blinking
 // spot-colored cursor. Honours prefers-reduced-motion.
-//
-// With SSR the initial headlines arrive as a prop (already in the server
-// HTML), so the "Connecting to the wire…" placeholder only shows if the
-// server fetch failed and the client fallback fetch is still in flight.
-export default function Ticker({ initialHeads = [] }: { initialHeads?: Head[] }) {
-  const [heads, setHeads] = useState<Head[]>(initialHeads)
+export default function Ticker() {
+  const [heads, setHeads] = useState<Head[]>([])
   const lineRef = useRef<HTMLAnchorElement>(null)
   const idx = useRef(0)
 
   useEffect(() => {
-    if (initialHeads.length > 0) return
     fetch(`${API}/api/articles?limit=12`)
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
         if (d?.data) setHeads((d.data as Head[]).map(a => ({ title: a.title, url: a.url })))
       })
       .catch(() => {})
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

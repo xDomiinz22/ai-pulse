@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import ReactMarkdown from 'react-markdown'

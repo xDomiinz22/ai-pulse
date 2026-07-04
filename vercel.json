@@ -3,7 +3,7 @@
     "frontend": {
       "entrypoint": ".",
       "routePrefix": "/",
-      "framework": "nextjs"
+      "framework": "vite"
     },
     "backend": {
       "entrypoint": "backend",

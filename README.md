@@ -26,7 +26,7 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 
 | Layer        | Technologies                                                                 |
 | ------------ | ---------------------------------------------------------------------------- |
-| **Frontend** | Next.js 16 (App Router, **SSR**), React 19, TypeScript, Tailwind CSS v4, GSAP, Fuse.js, date-fns |
+| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS v4, GSAP, Fuse.js, date-fns         |
 | **Design**   | [impeccable](https://github.com/anthropics/claude-code) (Claude Code skill) — critique, layout, adapt, polish, UX audit; PRODUCT.md + DESIGN.md design system |
 | **Backend**  | Node.js, Express 5, TypeScript, Prisma 7                                      |
 | **Data**     | Neon (PostgreSQL + **pgvector**), Upstash Redis (cache, rate limiting, trending, JWT denylist) |

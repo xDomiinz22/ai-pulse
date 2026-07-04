@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useRef } from 'react'
 import tippy from 'tippy.js'
 import type { FilterValue, Category } from '../types'
