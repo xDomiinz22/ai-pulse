@@ -8,9 +8,13 @@ import { articleEmbeddingText, generateEmbedding, toVectorLiteral } from '../lib
 const LOCK_KEY = 'scraper:lock'
 const LOCK_TTL = 600 // seconds — auto-releases if a run crashes
 
-const parser = new Parser()
+// Explicit timeouts — without them, a stalled feed or a stuck Gemini request
+// hangs indefinitely, which is what was actually burning through Vercel's
+// full 300s function ceiling on every scraper run (even ones with almost no
+// backlog left to process), not real workload volume.
+const parser = new Parser({ timeout: 15_000 }) // per-feed fetch, 15s
 const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
+const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' }, { timeout: 20_000 }) // per-call, 20s
 
 const RSS_FEEDS = [
   { url: 'https://feeds.feedburner.com/TechCrunch/AI', name: 'TechCrunch AI' },
@@ -181,8 +185,19 @@ export async function runScraper(): Promise<void> {
 // progress to a single timed-out attempt.
 const MAX_NEW_PER_RUN = 20
 
+// Overall wall-clock budget, independent of the per-item cap above. Even
+// with per-operation timeouts (feed fetch, Gemini call, DB queries all
+// bounded below), enough individually-slow-but-not-quite-hanging operations
+// can still add up past Vercel's 300s ceiling. This is the final backstop:
+// stop picking up new work once close to the limit, so the run always ends
+// on its own terms with a normal response instead of getting SIGKILL'd
+// mid-request (which is also what was leaving Redis locks / DB connections
+// in a lingering state for the next run to trip over).
+const RUN_BUDGET_MS = 240_000 // 240s — 60s buffer under the 300s ceiling
+
 async function scrapeFeeds(): Promise<void> {
   console.log('[scraper] Starting...')
+  const startedAt = Date.now()
   let saved = 0, skipped = 0, filtered = 0, processed = 0
 
   feedLoop: for (const feed of RSS_FEEDS) {
@@ -191,6 +206,10 @@ async function scrapeFeeds(): Promise<void> {
       console.log(`[scraper] ${feed.name}: ${parsed.items.length} items`)
 
       for (const item of parsed.items.slice(0, 10)) {
+        if (Date.now() - startedAt > RUN_BUDGET_MS) {
+          console.log(`[scraper] Hit the ${RUN_BUDGET_MS / 1000}s run budget — remaining items pick up next run`)
+          break feedLoop
+        }
         if (processed >= MAX_NEW_PER_RUN) {
           console.log(`[scraper] Reached ${MAX_NEW_PER_RUN}-per-run cap — remaining items pick up next run`)
           break feedLoop
