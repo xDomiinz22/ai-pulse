@@ -170,21 +170,38 @@ export async function runScraper(): Promise<void> {
   }
 }
 
+// Caps how many genuinely-new (non-duplicate) items get the full Gemini
+// analysis + save pipeline in a single run. Each one costs ~2s of throttle
+// plus the Gemini call itself (more on rate-limit retries), so an unbounded
+// backlog can blow past Vercel's 300s Hobby/Fluid-Compute function ceiling —
+// confirmed in production as a 504 FUNCTION_INVOCATION_TIMEOUT after a long
+// gap without a run. Capping keeps each invocation comfortably inside that
+// budget; the hourly trigger (.github/workflows/scraper-cron.yml) then
+// drains any remaining backlog over the next few runs instead of losing all
+// progress to a single timed-out attempt.
+const MAX_NEW_PER_RUN = 20
+
 async function scrapeFeeds(): Promise<void> {
   console.log('[scraper] Starting...')
-  let saved = 0, skipped = 0, filtered = 0
+  let saved = 0, skipped = 0, filtered = 0, processed = 0
 
-  for (const feed of RSS_FEEDS) {
+  feedLoop: for (const feed of RSS_FEEDS) {
     try {
       const parsed = await parser.parseURL(feed.url)
       console.log(`[scraper] ${feed.name}: ${parsed.items.length} items`)
 
       for (const item of parsed.items.slice(0, 10)) {
+        if (processed >= MAX_NEW_PER_RUN) {
+          console.log(`[scraper] Reached ${MAX_NEW_PER_RUN}-per-run cap — remaining items pick up next run`)
+          break feedLoop
+        }
         if (!item.title || !item.link) continue
 
         // Skip already saved
         const existing = await prisma.article.findUnique({ where: { url: item.link } })
         if (existing) { skipped++; continue }
+
+        processed++
 
         const rawText = cleanRawText(item.contentSnippet || item.summary || item.content || '')
 
@@ -252,5 +269,5 @@ async function scrapeFeeds(): Promise<void> {
   // Invalidate cached article lists/counts so the new articles show up at once.
   if (saved > 0) await bumpArticlesVersion()
 
-  console.log(`[scraper] Done — saved: ${saved}, skipped: ${skipped}, filtered: ${filtered}`)
+  console.log(`[scraper] Done — saved: ${saved}, skipped: ${skipped}, filtered: ${filtered}, new items processed: ${processed}/${MAX_NEW_PER_RUN}`)
 }
