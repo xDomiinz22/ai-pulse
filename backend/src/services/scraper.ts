@@ -180,7 +180,7 @@ export async function runScraper(): Promise<void> {
 // backlog can blow past Vercel's 300s Hobby/Fluid-Compute function ceiling —
 // confirmed in production as a 504 FUNCTION_INVOCATION_TIMEOUT after a long
 // gap without a run. Capping keeps each invocation comfortably inside that
-// budget; the hourly trigger (.github/workflows/scraper-cron.yml) then
+// budget; the daily trigger (.github/workflows/scraper-cron.yml) then
 // drains any remaining backlog over the next few runs instead of losing all
 // progress to a single timed-out attempt.
 const MAX_NEW_PER_RUN = 20

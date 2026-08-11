@@ -10,7 +10,7 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 
 ## Features
 
-- 📰 **Automated news scraping** — RSS feeds parsed hourly, filtered & categorized by Gemini 2.5 Flash (model / research / industry / ethics) with AI-generated summaries and read times. Oldest articles are pruned past a 500-article cap to stay within free-tier storage.
+- 📰 **Automated news scraping** — RSS feeds parsed daily, filtered & categorized by Gemini 2.5 Flash (model / research / industry / ethics) with AI-generated summaries and read times. Oldest articles are pruned past a 500-article cap to stay within free-tier storage.
 - 🧠 **Semantic search (pgvector)** — every article is embedded (768-dim, `gemini-embedding-001`) and stored in a Postgres `vector` column, enabling cosine-similarity retrieval over the news.
 - 💬 **AI chat assistant** — a from-scratch agent loop (Gemini 3.5 Flash + tool use) that calls semantic search and answers questions over the database with citations. Streaming-style typing indicator and graceful "model busy" handling.
 - 🔌 **MCP server** — the same `search_articles` retrieval is exposed over the Model Context Protocol (Streamable HTTP), so any MCP client (Claude Desktop, Claude.ai connectors, Claude Code) can query the news with its own model.
@@ -115,7 +115,7 @@ cd backend && npm run dev
 npm run dev
 ```
 
-The scraper runs **hourly** via `node-cron` (it no longer runs on startup, to avoid burning the Gemini quota on every restart). To populate the database immediately, trigger it manually with the admin-only `POST /api/scraper/run` endpoint, or backfill embeddings for existing rows with `npx ts-node --files src/scripts/backfillEmbeddings.ts`.
+The scraper runs **daily** in production (see [Keeping the Scraper Running](#keeping-the-scraper-running)); locally, `backend/src/index.ts` still schedules it hourly via `node-cron` for convenience while developing (it no longer runs on startup, to avoid burning the Gemini quota on every restart). To populate the database immediately, trigger it manually with the admin-only `POST /api/scraper/run` endpoint, or backfill embeddings for existing rows with `npx ts-node --files src/scripts/backfillEmbeddings.ts`.
 
 ---
 
@@ -136,7 +136,7 @@ All backend secrets live in `backend/.env` (git-ignored). See [`backend/.env.exa
 | `PORT`                     |    ➖    | Backend port (default `3001`). Do not set on Vercel.               |
 | `FRONTEND_URL`             |    ➖    | Allowed CORS origin (default `http://localhost:5177`). Injected automatically on Vercel. |
 | `NODE_ENV`                 |    ➖    | Set to `production` in prod to enable HSTS + secure cookies.       |
-| `CRON_SECRET`               |    ✅*   | Authorizes `GET /api/cron/scraper` (the hourly scraper trigger). *Required in production — see [Keeping the scraper running](#keeping-the-scraper-running). |
+| `CRON_SECRET`               |    ✅*   | Authorizes `GET /api/cron/scraper` (the daily scraper trigger). *Required in production — see [Keeping the scraper running](#keeping-the-scraper-running). |
 
 > The **frontend** reads the public Google Client ID from `VITE_GOOGLE_CLIENT_ID` (it falls back to a built-in default, since a Client ID is not secret).
 
@@ -198,19 +198,21 @@ Key points:
 
 ## Keeping the Scraper Running
 
-`backend/src/index.ts` registers an hourly `node-cron` schedule inside `app.listen()`'s callback — this **only fires while that process stays alive continuously**. It works fine in local dev (`npm run dev` never exits), but on Vercel the service instance gets recycled well before an hour of idle time passes, silently dropping the in-memory timer with nothing to reschedule it. (Confirmed: production went 5+ weeks with zero new articles before this was caught.)
+`backend/src/index.ts` registers a `node-cron` schedule inside `app.listen()`'s callback — this **only fires while that process stays alive continuously**. It works fine in local dev (`npm run dev` never exits), but on Vercel the service instance gets recycled well before that, silently dropping the in-memory timer with nothing to reschedule it. (Confirmed: production went 5+ weeks with zero new articles before this was caught.)
 
 Two things exist specifically to work around this:
 
-- **`GET /api/cron/scraper`** (`backend/src/app.ts`) — a standalone HTTP endpoint that runs the scraper on demand, authorized by a `Bearer <CRON_SECRET>` header (skips the auth check entirely if `CRON_SECRET` is unset — set it in production).
-- **[`.github/workflows/scraper-cron.yml`](.github/workflows/scraper-cron.yml)** — a GitHub Actions workflow on an hourly `schedule` (plus a manual `workflow_dispatch` trigger) that calls the endpoint above. GitHub Actions' scheduler isn't subject to Vercel's Hobby-plan once-daily Cron Jobs limit, so this keeps the original hourly cadence without needing a paid plan.
+- **`GET /api/cron/scraper`** (`backend/src/app.ts`) — a standalone HTTP endpoint that runs the scraper on demand, authorized by a `Bearer <CRON_SECRET>` header (skips the auth check entirely if `CRON_SECRET` is unset — set it in production). It `await`s the run to completion before responding — an earlier fire-and-forget version reported success while Vercel silently killed the actual work the instant the response was sent.
+- **[`.github/workflows/scraper-cron.yml`](.github/workflows/scraper-cron.yml)** — a GitHub Actions workflow, currently on a **daily** `schedule` (plus a manual `workflow_dispatch` trigger) that calls the endpoint above. GitHub Actions was originally adopted to route around Vercel Hobby's once-daily Cron Jobs cap when the scraper ran hourly; now that it's daily, [Vercel's own Cron Jobs](https://vercel.com/docs/cron-jobs) would work too — GitHub Actions was kept anyway for continuity.
+
+**Reliability, in case the RSS/Gemini backlog is ever large** (e.g. after another gap in coverage): `backend/src/services/scraper.ts` caps processing to `MAX_NEW_PER_RUN` (20) genuinely-new articles and an overall `RUN_BUDGET_MS` (240s) wall-clock budget per run, and every network call (RSS fetch, Gemini, Postgres) has an explicit timeout — a stalled call fails fast into the existing per-item error handling instead of silently burning the whole run. A backlog larger than one run's cap/budget drains over several subsequent runs instead of repeatedly timing out (confirmed in production: this is exactly what happened before these limits existed — every run failed with a `504 FUNCTION_INVOCATION_TIMEOUT` at Vercel's exact 300s ceiling, regardless of how little work was actually left to do).
 
 **To enable this on a fork/new deployment:**
 
 1. Generate a secret: `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
 2. Set it as `CRON_SECRET` in the Vercel project's environment variables.
 3. Set the **same** value as a GitHub repo secret named `CRON_SECRET` (Settings → Secrets and variables → Actions → New repository secret).
-4. The workflow starts running automatically once merged to the default branch — trigger it manually via the Actions tab (`Run workflow`) to verify without waiting for the next hour.
+4. The workflow starts running automatically once merged to the default branch — trigger it manually via the Actions tab (`Run workflow`) to verify without waiting for the next scheduled run.
 
 ---
 

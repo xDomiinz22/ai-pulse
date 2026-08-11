@@ -1,16 +1,16 @@
-name: Hourly scraper trigger
+name: Daily scraper trigger
 
-# Vercel's Hobby plan only allows daily Cron Jobs, but the scraper is
-# designed to run hourly (see backend/src/services/scraper.ts). The
-# in-process node-cron timer in backend/src/index.ts only fires while that
-# serverless instance happens to stay warm — Vercel recycles it well before
-# an hour passes, so it silently stopped firing in production (confirmed:
-# no new articles for 5+ weeks). This workflow calls the backend's existing
-# secured cron endpoint on a real, guaranteed-to-run schedule instead.
+# GitHub Actions' scheduler isn't subject to Vercel's Hobby-plan Cron Jobs
+# restrictions, so this stays the trigger mechanism even at daily cadence —
+# it's what calls the backend's secured cron endpoint on a real,
+# guaranteed-to-run schedule (the in-process node-cron timer in
+# backend/src/index.ts only fires while that serverless instance happens to
+# stay warm, which Vercel doesn't guarantee; confirmed in production as
+# 5+ weeks with zero new articles before this workflow was added).
 
 on:
   schedule:
-    - cron: '0 * * * *' # every hour, on the hour (UTC)
+    - cron: '0 6 * * *' # once daily, 06:00 UTC
   workflow_dispatch: {} # manual "Run workflow" button for on-demand triggers
 
 jobs:
