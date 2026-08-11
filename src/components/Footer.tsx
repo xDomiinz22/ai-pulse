@@ -23,7 +23,7 @@ export default function Footer() {
             <div className="font-display font-black text-[22px] leading-none text-[var(--ink)] mb-1">
               AI&nbsp;Pulse
             </div>
-            <p className="wire text-[var(--ink-mute)]">Artificial Intelligence · Reported hourly from the wire</p>
+            <p className="wire text-[var(--ink-mute)]">Artificial Intelligence · Reported daily from the wire</p>
           </div>
           <span className="wire text-[var(--ink-mute)]">© 2026 AI Pulse</span>
         </div>

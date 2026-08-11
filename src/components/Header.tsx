@@ -18,7 +18,7 @@ export default function Header({ query, onQueryChange }: Props) {
   useEffect(() => {
     if (!liveRef.current) return
     const instance = tippy(liveRef.current, {
-      content: 'Updated every hour from the wire',
+      content: 'Updated daily from the wire',
       placement: 'bottom',
       theme: 'aipulse',
     })
@@ -86,7 +86,7 @@ export default function Header({ query, onQueryChange }: Props) {
       {/* ── Nameplate ── */}
       <div className="border-b-[3px] border-[var(--ink)]">
         <div className="max-w-[1160px] mx-auto px-6 pt-6 pb-4 text-center">
-          <div className="wire mb-2.5">Artificial Intelligence · Reported Hourly</div>
+          <div className="wire mb-2.5">Artificial Intelligence · Reported Daily</div>
           <a
             href="#"
             className="font-display font-black tracking-[-0.015em] leading-[0.9] text-[var(--ink)] inline-block"

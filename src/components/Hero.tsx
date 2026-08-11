@@ -36,7 +36,7 @@ export default function Hero() {
           style={{ fontSize: '18px', lineHeight: 1.65 }}>
           Breakthroughs, research and industry moves from across the
           artificial-intelligence world — filtered, summarized and ranked,
-          fresh from the wire every hour.
+          fresh from the wire every day.
         </p>
       </div>
     </section>
