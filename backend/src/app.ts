@@ -47,20 +47,39 @@ app.use(`${P}/newsletter`, writeLimiter, newsletterRouter)
 
 app.get(`${P}/health`, (_req, res) => res.json({ status: 'ok' }))
 
-// Manual scraper trigger — admin only + throttled
-app.post(`${P}/scraper/run`, csrfProtection, authenticate, requireAdmin, writeLimiter, (_req, res) => {
-  res.json({ message: 'Scraper started in background' })
-  runScraper().catch(console.error)
+// Manual scraper trigger — admin only + throttled.
+// Awaits the run instead of firing-and-forgetting: on Vercel, a serverless
+// invocation is torn down once its response is sent, which was silently
+// killing runScraper() mid-run every time (confirmed: 5+ weeks with zero
+// new articles despite this endpoint reporting success on every call).
+app.post(`${P}/scraper/run`, csrfProtection, authenticate, requireAdmin, writeLimiter, async (_req, res) => {
+  try {
+    await runScraper()
+    res.json({ message: 'Scraper run complete' })
+  } catch (err) {
+    console.error('[scraper/run]', err)
+    res.status(500).json({ error: 'Scraper run failed', detail: (err as Error).message })
+  }
 })
 
-// Cron trigger endpoint — protected by a shared secret if CRON_SECRET is set
-app.get(`${P}/cron/scraper`, (req, res) => {
+// Cron trigger endpoint — protected by a shared secret if CRON_SECRET is set.
+// Same await-before-responding fix as above; the caller (GitHub Actions —
+// see .github/workflows/scraper-cron.yml) has no client-side timeout, so a
+// multi-minute run is fine. Requires the Vercel function's own max duration
+// to cover a full run — verify in the Vercel dashboard if this endpoint
+// starts timing out on a large backlog.
+app.get(`${P}/cron/scraper`, async (req, res) => {
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret && req.headers.authorization !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
-  res.json({ message: 'Scraper triggered' })
-  runScraper().catch(console.error)
+  try {
+    await runScraper()
+    res.json({ message: 'Scraper run complete' })
+  } catch (err) {
+    console.error('[cron/scraper]', err)
+    res.status(500).json({ error: 'Scraper run failed', detail: (err as Error).message })
+  }
 })
 
 app.use(notFound)
