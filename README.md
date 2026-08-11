@@ -136,6 +136,7 @@ All backend secrets live in `backend/.env` (git-ignored). See [`backend/.env.exa
 | `PORT`                     |    ➖    | Backend port (default `3001`). Do not set on Vercel.               |
 | `FRONTEND_URL`             |    ➖    | Allowed CORS origin (default `http://localhost:5177`). Injected automatically on Vercel. |
 | `NODE_ENV`                 |    ➖    | Set to `production` in prod to enable HSTS + secure cookies.       |
+| `CRON_SECRET`               |    ✅*   | Authorizes `GET /api/cron/scraper` (the hourly scraper trigger). *Required in production — see [Keeping the scraper running](#keeping-the-scraper-running). |
 
 > The **frontend** reads the public Google Client ID from `VITE_GOOGLE_CLIENT_ID` (it falls back to a built-in default, since a Client ID is not secret).
 
@@ -187,11 +188,29 @@ Deployed on **Vercel** as a **single project with two services** (Vercel "Servic
 
 Key points:
 
-- The backend runs as an always-on web service (`backend/src/index.ts` → `app.listen` + hourly `node-cron` scraper, loaded via dynamic `import()` since node-cron v4 is ESM-only).
+- The backend's request-serving (`backend/src/index.ts` → `app.listen`) runs as a web service under `experimentalServices`. Its in-process `node-cron` scraper schedule (loaded via dynamic `import()` since node-cron v4 is ESM-only) is **not** a reliable production trigger — see below.
 - Vercel **strips** the `/api` route prefix, so backend routes are mounted at root in production (handled automatically via the `VERCEL` env var).
 - Set the same environment variables from the table above in the Vercel dashboard — except `PORT` and `FRONTEND_URL`, which Vercel manages for you.
 - For Google login, add your deployment URL to the OAuth client's **Authorized JavaScript origins**.
 - If the ISR cache ever needs to be force-refreshed sooner than its 30-minute expiration (e.g. right after fixing a bug), the reliable option today is purging via the Vercel dashboard (Storage / Data Cache) — on-demand revalidation via `x-prerender-revalidate` isn't wired up yet.
+
+---
+
+## Keeping the Scraper Running
+
+`backend/src/index.ts` registers an hourly `node-cron` schedule inside `app.listen()`'s callback — this **only fires while that process stays alive continuously**. It works fine in local dev (`npm run dev` never exits), but on Vercel the service instance gets recycled well before an hour of idle time passes, silently dropping the in-memory timer with nothing to reschedule it. (Confirmed: production went 5+ weeks with zero new articles before this was caught.)
+
+Two things exist specifically to work around this:
+
+- **`GET /api/cron/scraper`** (`backend/src/app.ts`) — a standalone HTTP endpoint that runs the scraper on demand, authorized by a `Bearer <CRON_SECRET>` header (skips the auth check entirely if `CRON_SECRET` is unset — set it in production).
+- **[`.github/workflows/scraper-cron.yml`](.github/workflows/scraper-cron.yml)** — a GitHub Actions workflow on an hourly `schedule` (plus a manual `workflow_dispatch` trigger) that calls the endpoint above. GitHub Actions' scheduler isn't subject to Vercel's Hobby-plan once-daily Cron Jobs limit, so this keeps the original hourly cadence without needing a paid plan.
+
+**To enable this on a fork/new deployment:**
+
+1. Generate a secret: `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
+2. Set it as `CRON_SECRET` in the Vercel project's environment variables.
+3. Set the **same** value as a GitHub repo secret named `CRON_SECRET` (Settings → Secrets and variables → Actions → New repository secret).
+4. The workflow starts running automatically once merged to the default branch — trigger it manually via the Actions tab (`Run workflow`) to verify without waiting for the next hour.
 
 ---
 

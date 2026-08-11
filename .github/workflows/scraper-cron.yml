@@ -1,0 +1,30 @@
+name: Hourly scraper trigger
+
+# Vercel's Hobby plan only allows daily Cron Jobs, but the scraper is
+# designed to run hourly (see backend/src/services/scraper.ts). The
+# in-process node-cron timer in backend/src/index.ts only fires while that
+# serverless instance happens to stay warm — Vercel recycles it well before
+# an hour passes, so it silently stopped firing in production (confirmed:
+# no new articles for 5+ weeks). This workflow calls the backend's existing
+# secured cron endpoint on a real, guaranteed-to-run schedule instead.
+
+on:
+  schedule:
+    - cron: '0 * * * *' # every hour, on the hour (UTC)
+  workflow_dispatch: {} # manual "Run workflow" button for on-demand triggers
+
+jobs:
+  trigger-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/scraper
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w "%{http_code}" \
+            -X GET "https://ai-pulse-newsletter.vercel.app/api/cron/scraper" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          echo "HTTP status: $status"
+          cat /tmp/response.txt
+          if [ "$status" -ge 400 ]; then
+            echo "::error::Scraper trigger failed with status $status"
+            exit 1
+          fi
