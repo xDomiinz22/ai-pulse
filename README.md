@@ -38,6 +38,14 @@ AI Pulse pulls the latest articles from AI-focused sources, uses Gemini to keep 
 
 ---
 
+## Architecture
+
+![AI Pulse architecture](docs/architecture.svg)
+
+One Vercel deployment holds both services on the same origin — which is what lets the httpOnly auth cookies work without cross-site issues, and what lets the SSR render resolve the backend at the origin the request already arrived on (see the Deployment Protection note under [Rendering: SSR + ISR](#rendering-ssr--isr)). Only the backend talks to the external services; the frontend never reaches Neon, Redis, or Gemini directly.
+
+---
+
 ## Project Structure
 
 ```
