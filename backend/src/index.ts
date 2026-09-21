@@ -1,3 +1,8 @@
+// Load .env before anything else imports ./config. On Vercel this file is not
+// the entrypoint (src/app.ts is) and the platform injects env vars directly,
+// so dotenv stays out of the deployed bundle.
+import 'dotenv/config'
+
 import app from './app'
 import { config } from './config'
 import { runScraper } from './services/scraper'
