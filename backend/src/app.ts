@@ -33,11 +33,10 @@ app.use(express.json({ limit: '100kb' }))
 app.use(cookieParser())
 app.use(globalLimiter)
 
-// On Vercel "Services" the backend is mounted at routePrefix /api and Vercel
-// strips that prefix before the request reaches Express, so routes must live at
-// the root (Vercel sets the VERCEL env var automatically). In local dev there
-// is no stripping, so we keep the /api prefix to match the frontend's calls.
-const P = process.env.VERCEL ? '' : '/api'
+// Vercel's services model forwards the original request path to the service
+// (`/api/health` arrives as `/api/health`, not `/health`), so the prefix is
+// the same here as it is locally.
+const P = '/api'
 
 app.use(`${P}/auth`,       authLimiter, authRouter)
 app.use(`${P}/articles`,   articlesRouter)
